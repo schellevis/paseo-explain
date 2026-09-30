@@ -1,0 +1,293 @@
+{
+  "explain_schema": 1,
+  "kind": "idea",
+  "lang": "en",
+  "title": "Tool-lending shelf",
+  "levels": [
+    1,
+    3,
+    5
+  ],
+  "lead": {
+    "text": {
+      "1": "Neighbours borrow tools from a shelf in the hall.",
+      "3": "A hall shelf lets neighbours borrow a drill, a ladder, or hand tools for a weekend.",
+      "5": "The proposal is a staffed hall shelf with weekend loans of shared tools and a paper log."
+    },
+    "evidence": [
+      "E1"
+    ],
+    "confidence": "user_statement"
+  },
+  "facts": [
+    {
+      "label": "Place",
+      "value": "Community hall",
+      "evidence": [
+        "E2"
+      ],
+      "confidence": "user_statement"
+    },
+    {
+      "label": "Fees",
+      "value": "None",
+      "evidence": [
+        "E5"
+      ],
+      "confidence": "user_statement"
+    }
+  ],
+  "hero": {
+    "caption": {
+      "1": "Tools sit on a shelf. Volunteers check them.",
+      "3": "Cards on the shelf name a return day, and volunteers look twice a week.",
+      "5": "Each tool card carries a return day and shelf number; volunteers inspect the shelf twice weekly."
+    },
+    "height": 320,
+    "zones": [
+      {
+        "id": "hall",
+        "label": "Community hall",
+        "tone": "existing",
+        "x": 40,
+        "y": 30,
+        "w": 560,
+        "h": 250
+      },
+      {
+        "id": "homes",
+        "label": "Neighbour homes",
+        "tone": "external",
+        "x": 640,
+        "y": 30,
+        "w": 320,
+        "h": 250
+      }
+    ],
+    "nodes": [
+      {
+        "id": "shelf",
+        "label": "Tool shelf",
+        "sub": "cards and numbers",
+        "tone": "existing",
+        "zone": "hall",
+        "x": 80,
+        "y": 120,
+        "detail": {
+          "1": "The shelf holds tools with a card for each one.",
+          "3": "Each tool has a card with a return day and the shelf number.",
+          "5": "The card is the loan record: return day plus shelf number, kept on the shelf itself."
+        },
+        "evidence": [
+          "E2"
+        ],
+        "confidence": "user_statement"
+      },
+      {
+        "id": "checks",
+        "label": "Volunteer checks",
+        "tone": "new",
+        "zone": "hall",
+        "x": 320,
+        "y": 120,
+        "detail": {
+          "1": "Volunteers look at the shelf twice a week.",
+          "3": "Twice a week, volunteers set aside anything that needs a repair.",
+          "5": "A twice-weekly inspection quarantines tools whose condition needs repair."
+        },
+        "evidence": [
+          "E4"
+        ],
+        "confidence": "user_statement"
+      },
+      {
+        "id": "homes",
+        "label": "Borrowers",
+        "tone": "external",
+        "zone": "homes",
+        "x": 700,
+        "y": 120,
+        "detail": {
+          "1": "Neighbours take tools home for a weekend.",
+          "3": "A neighbour borrows a drill, a ladder, or hand tools and brings them back.",
+          "5": "Loans leave the hall for a weekend and return to the same numbered shelf."
+        },
+        "evidence": [
+          "E1"
+        ],
+        "confidence": "user_statement"
+      }
+    ],
+    "edges": [
+      {
+        "from": "shelf",
+        "to": "homes",
+        "label": "weekend",
+        "tone": "existing"
+      },
+      {
+        "from": "homes",
+        "to": "checks",
+        "tone": "new"
+      }
+    ],
+    "steps": [
+      {
+        "nodes": [
+          "shelf",
+          "homes"
+        ],
+        "from": "shelf",
+        "to": "homes",
+        "text": {
+          "1": "A neighbour takes a tool home for the weekend.",
+          "3": "The loan starts at the shelf and ends when the tool comes back.",
+          "5": "Custody moves from the numbered shelf to the borrower for one weekend."
+        },
+        "evidence": [
+          "E1"
+        ]
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "shelf",
+      "type": "prose",
+      "title": "The shelf",
+      "subtitle": {
+        "1": "Local, free, and on paper.",
+        "3": "The idea stays local, with no fees and a paper log.",
+        "5": "Constraints are locality, zero fees, no delivery route, and a paper borrowing log."
+      },
+      "evidence": [
+        "E5"
+      ],
+      "confidence": "user_statement",
+      "body": {
+        "1": "People borrow a drill, a ladder, or hand tools. They bring them back.",
+        "3": "The shelf stands in the community hall. A paper log records who borrowed what.",
+        "5": "The operating picture is a hall shelf, weekend loans, and a paper log instead of a delivery service."
+      }
+    },
+    {
+      "id": "picture",
+      "type": "diagram",
+      "title": "Loan path",
+      "evidence": [
+        "E2"
+      ],
+      "confidence": "inferred",
+      "mermaid": "flowchart LR\n  shelf[Tool shelf] --> homes[Borrowers]\n  homes --> checks[Volunteer checks]\n",
+      "caption": {
+        "1": "Tools leave the shelf and come back for a check.",
+        "3": "The path runs from the shelf to the borrower and then to a volunteer check.",
+        "5": "Custody flows shelf to borrower, then back through the twice-weekly inspection."
+      },
+      "alt": "The tool shelf points to borrowers, and borrowers point to volunteer checks."
+    },
+    {
+      "id": "choices",
+      "type": "decisions",
+      "title": "Choices in the idea",
+      "evidence": [
+        "E5"
+      ],
+      "confidence": "user_statement",
+      "items": [
+        {
+          "status": "chosen",
+          "title": "Keep a paper log",
+          "why": {
+            "1": "A paper log is enough for a small shelf.",
+            "3": "The idea chooses a paper log because there are no fees and no delivery route.",
+            "5": "A paper log matches the no-fee, no-delivery constraint and avoids a separate account system."
+          },
+          "evidence": [
+            "E5"
+          ],
+          "confidence": "user_statement"
+        },
+        {
+          "status": "rejected",
+          "title": "Add a delivery route",
+          "why": {
+            "1": "Tools stay at the hall. Nobody delivers them.",
+            "3": "Delivery was set aside so neighbours come to the hall themselves.",
+            "5": "A delivery route was rejected to keep the shelf local and the operating cost at zero."
+          },
+          "evidence": [
+            "E5"
+          ],
+          "confidence": "assumption"
+        }
+      ]
+    },
+    {
+      "id": "risks",
+      "type": "risks",
+      "title": "Open points",
+      "evidence": [
+        "E4"
+      ],
+      "confidence": "inferred",
+      "items": [
+        {
+          "kind": "risk",
+          "title": "Tools may come back broken",
+          "text": {
+            "1": "A borrowed tool might need a repair.",
+            "3": "Volunteers can set a tool aside, but parts and time are not described.",
+            "5": "Repair demand is acknowledged, yet spare parts and labour are outside the note."
+          },
+          "evidence": [
+            "E4"
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "kind": "open_question",
+          "title": "How long is a weekend loan",
+          "text": {
+            "1": "The note says a weekend, not an exact hour.",
+            "3": "Return timing is still open beyond the card's return day.",
+            "5": "The return-day field exists, but the grace period after that day is undefined."
+          },
+          "evidence": [
+            "E2"
+          ],
+          "confidence": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "quiz",
+      "type": "quiz",
+      "title": "Check your reading",
+      "evidence": [
+        "E5"
+      ],
+      "confidence": "inferred",
+      "items": [
+        {
+          "q": {
+            "1": "Does the shelf charge a fee?",
+            "3": "Are there fees or a delivery route?",
+            "5": "Does the proposal include fees or a delivery route?"
+          },
+          "a": {
+            "1": "No. Borrowing is free and local.",
+            "3": "No. There are no fees and no delivery route.",
+            "5": "No. Fees and delivery are both excluded; a paper log records the loan."
+          }
+        }
+      ]
+    }
+  ],
+  "glossary": [
+    {
+      "term": "Shelf",
+      "definition": "The hall place where shared tools wait to be borrowed."
+    }
+  ]
+}

@@ -1,0 +1,2588 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paseo-explain.invalid/explain.schema.json",
+  "title": "explain.json",
+  "description": "Documentation schema for paseo-explain explain.json (schema version 1). The runtime validator is explainlib.validate. Total document size is at most 200000 bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "explain_schema",
+    "kind",
+    "lang",
+    "title",
+    "levels",
+    "lead",
+    "facts",
+    "hero",
+    "sections",
+    "glossary"
+  ],
+  "properties": {
+    "explain_schema": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "plan",
+        "idea"
+      ]
+    },
+    "lang": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 80,
+      "minLength": 1
+    },
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "description": "Must equal session.json.levels, either [1, 3, 5] or [1, 2, 3, 4, 5]."
+    },
+    "lead": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 90 words.",
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "1": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                },
+                "3": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                },
+                "5": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                }
+              },
+              "required": [
+                "1",
+                "3",
+                "5"
+              ],
+              "description": "Keys are exactly one allowed written-level set."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "1": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                },
+                "2": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                },
+                "3": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                },
+                "4": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                },
+                "5": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 90 words."
+                }
+              },
+              "required": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ],
+              "description": "Keys are exactly one allowed written-level set."
+            }
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Fragment ids that exist in evidence.json."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "inferred",
+            "unknown",
+            "user_statement",
+            "assumption"
+          ],
+          "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+        }
+      },
+      "required": [
+        "text",
+        "evidence",
+        "confidence"
+      ]
+    },
+    "facts": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 24
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Fragment ids that exist in evidence.json."
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "inferred",
+              "unknown",
+              "user_statement",
+              "assumption"
+            ],
+            "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+          }
+        },
+        "required": [
+          "label",
+          "value",
+          "evidence",
+          "confidence"
+        ]
+      }
+    },
+    "hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "caption": {
+          "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "1": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                },
+                "3": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                },
+                "5": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                }
+              },
+              "required": [
+                "1",
+                "3",
+                "5"
+              ],
+              "description": "Keys are exactly one allowed written-level set."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "1": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                },
+                "2": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                },
+                "3": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                },
+                "4": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                },
+                "5": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Non-empty text of at most 40 words."
+                }
+              },
+              "required": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ],
+              "description": "Keys are exactly one allowed written-level set."
+            }
+          ]
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 600
+        },
+        "zones": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 32
+              },
+              "tone": {
+                "enum": [
+                  "existing",
+                  "new",
+                  "external"
+                ]
+              },
+              "x": {
+                "type": "integer"
+              },
+              "y": {
+                "type": "integer"
+              },
+              "w": {
+                "type": "integer"
+              },
+              "h": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "tone",
+              "x",
+              "y",
+              "w",
+              "h"
+            ],
+            "description": "Rectangle lies within 0..1000 by 0..height."
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 28
+              },
+              "sub": {
+                "type": "string",
+                "maxLength": 36
+              },
+              "tone": {
+                "enum": [
+                  "existing",
+                  "new",
+                  "external"
+                ]
+              },
+              "zone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "x": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "w": {
+                "type": "integer",
+                "minimum": 120,
+                "maximum": 320
+              },
+              "detail": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 80 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 80 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "tone",
+              "zone",
+              "x",
+              "y",
+              "detail",
+              "evidence",
+              "confidence"
+            ],
+            "description": "w defaults to 180 when omitted. x and y lie on the canvas."
+          }
+        },
+        "edges": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "tone": {
+                "enum": [
+                  "existing",
+                  "new"
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "tone"
+            ],
+            "description": "from and to are distinct node ids."
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nodes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              }
+            },
+            "required": [
+              "nodes",
+              "from",
+              "to",
+              "text",
+              "evidence"
+            ],
+            "description": "from and to are both null or both node ids."
+          }
+        }
+      },
+      "required": [
+        "caption",
+        "height",
+        "zones",
+        "nodes",
+        "edges",
+        "steps"
+      ]
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 8,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "prose"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              },
+              "body": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 250 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 250 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "body"
+            ],
+            "description": "Allowed for plan and idea."
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "change"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              },
+              "now": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "3",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "2": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "4": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        }
+                      ]
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Fragment ids that exist in evidence.json."
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "confirmed",
+                        "inferred",
+                        "unknown",
+                        "user_statement",
+                        "assumption"
+                      ],
+                      "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+                    },
+                    "quote": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "evidence": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "text": {
+                          "type": "string",
+                          "maxLength": 300,
+                          "description": "Verbatim substring of the cited fragment after normalising CRLF."
+                        }
+                      },
+                      "required": [
+                        "evidence",
+                        "text"
+                      ],
+                      "description": "Optional verbatim quote."
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "evidence",
+                    "confidence"
+                  ]
+                }
+              },
+              "next": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "3",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "2": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "4": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        }
+                      ]
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Fragment ids that exist in evidence.json."
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "confirmed",
+                        "inferred",
+                        "unknown",
+                        "user_statement",
+                        "assumption"
+                      ],
+                      "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+                    },
+                    "quote": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "evidence": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "text": {
+                          "type": "string",
+                          "maxLength": 300,
+                          "description": "Verbatim substring of the cited fragment after normalising CRLF."
+                        }
+                      },
+                      "required": [
+                        "evidence",
+                        "text"
+                      ],
+                      "description": "Optional verbatim quote."
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "evidence",
+                    "confidence"
+                  ]
+                }
+              },
+              "unchanged": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "3",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "2": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "4": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        }
+                      ]
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Fragment ids that exist in evidence.json."
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "confirmed",
+                        "inferred",
+                        "unknown",
+                        "user_statement",
+                        "assumption"
+                      ],
+                      "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+                    },
+                    "quote": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "evidence": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "text": {
+                          "type": "string",
+                          "maxLength": 300,
+                          "description": "Verbatim substring of the cited fragment after normalising CRLF."
+                        }
+                      },
+                      "required": [
+                        "evidence",
+                        "text"
+                      ],
+                      "description": "Optional verbatim quote."
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "evidence",
+                    "confidence"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "now",
+              "next",
+              "unchanged"
+            ],
+            "description": "Allowed for plan. Each list has 0..6 items and the three lists together have at least one."
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "diagram"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              },
+              "mermaid": {
+                "type": "string",
+                "maxLength": 3000,
+                "minLength": 1,
+                "description": "First non-empty line starts with flowchart, graph, sequenceDiagram, stateDiagram-v2, mindmap, or timeline. At most 40 non-empty lines. Forbidden tokens: <, click , %%{, javascript:, href, callback, call . Flowchart or graph node count is at most 25."
+              },
+              "caption": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "alt": {
+                "type": "string",
+                "maxLength": 400,
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "mermaid",
+              "caption",
+              "alt"
+            ],
+            "description": "Allowed for plan and idea."
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "coverage"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              },
+              "requirements": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 30,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "maxLength": 12,
+                      "minLength": 1
+                    },
+                    "text": {
+                      "type": "string",
+                      "maxLength": 120
+                    },
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "test": {
+                      "enum": [
+                        "yes",
+                        "no",
+                        "unknown"
+                      ]
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Fragment ids that exist in evidence.json."
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "confirmed",
+                        "inferred",
+                        "unknown",
+                        "user_statement",
+                        "assumption"
+                      ],
+                      "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "text",
+                    "tasks",
+                    "test",
+                    "evidence",
+                    "confidence"
+                  ]
+                }
+              },
+              "tasks": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 40,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "maxLength": 12,
+                      "minLength": 1
+                    },
+                    "label": {
+                      "type": "string",
+                      "maxLength": 60
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Fragment ids that exist in evidence.json."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "evidence"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "requirements",
+              "tasks"
+            ],
+            "description": "Allowed for plan. Every id in a requirement tasks list exists in tasks."
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "decisions"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              },
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "chosen",
+                        "rejected"
+                      ]
+                    },
+                    "title": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "why": {
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 80 words.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "3",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "2": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "4": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        }
+                      ]
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Fragment ids that exist in evidence.json."
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "confirmed",
+                        "inferred",
+                        "unknown",
+                        "user_statement",
+                        "assumption"
+                      ],
+                      "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "title",
+                    "why",
+                    "evidence",
+                    "confidence"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "items"
+            ],
+            "description": "Allowed for plan and idea. At least one item is chosen."
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "risks"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              },
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "risk",
+                        "open_question",
+                        "assumption"
+                      ]
+                    },
+                    "title": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "text": {
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 80 words.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "3",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "2": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "4": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        }
+                      ]
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Fragment ids that exist in evidence.json."
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "confirmed",
+                        "inferred",
+                        "unknown",
+                        "user_statement",
+                        "assumption"
+                      ],
+                      "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "title",
+                    "text",
+                    "evidence",
+                    "confidence"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "items"
+            ],
+            "description": "Allowed for plan and idea."
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "quiz"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list."
+              },
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "q": {
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "3",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "2": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "4": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 40 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        }
+                      ]
+                    },
+                    "a": {
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 80 words.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "3",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "1": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "2": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "3": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "4": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            },
+                            "5": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Non-empty text of at most 80 words."
+                            }
+                          },
+                          "required": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                          ],
+                          "description": "Keys are exactly one allowed written-level set."
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "q",
+                    "a"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "items"
+            ],
+            "description": "Allowed for plan and idea. Quiz text is explanatory, not a claim unit."
+          }
+        ]
+      }
+    },
+    "glossary": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "term": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "definition": {
+            "type": "string",
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "term",
+          "definition"
+        ],
+        "description": "Terms are unique case-insensitively."
+      }
+    }
+  }
+}

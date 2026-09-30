@@ -1,0 +1,457 @@
+{
+  "explain_schema": 1,
+  "kind": "plan",
+  "lang": "en",
+  "title": "Garden plot booking",
+  "levels": [
+    1,
+    3,
+    5
+  ],
+  "lead": {
+    "text": {
+      "1": "Neighbours book one garden plot for a season.",
+      "3": "Neighbours reserve one plot for a season, and the plan keeps two active bookings from overlapping.",
+      "5": "The workflow grants one exclusive active booking per plot and season, with a waitlist and a shared board."
+    },
+    "evidence": [
+      "E1"
+    ],
+    "confidence": "confirmed"
+  },
+  "facts": [
+    {
+      "label": "Plots",
+      "value": "Name, size, season",
+      "evidence": [
+        "E5"
+      ],
+      "confidence": "confirmed"
+    },
+    {
+      "label": "Waitlist",
+      "value": "Arrival order",
+      "evidence": [
+        "E7"
+      ],
+      "confidence": "confirmed"
+    }
+  ],
+  "hero": {
+    "caption": {
+      "1": "Plots, overlap checks, and a public board.",
+      "3": "A plot record feeds an overlap check, then a board that shows free plots.",
+      "5": "Plot records are the source for the overlap rule, which publishes free slots on a read-only board."
+    },
+    "height": 360,
+    "zones": [
+      {
+        "id": "garden",
+        "label": "Garden plots",
+        "tone": "existing",
+        "x": 40,
+        "y": 40,
+        "w": 440,
+        "h": 260
+      },
+      {
+        "id": "hall",
+        "label": "Hall board",
+        "tone": "external",
+        "x": 520,
+        "y": 40,
+        "w": 440,
+        "h": 260
+      }
+    ],
+    "nodes": [
+      {
+        "id": "plots",
+        "label": "Plot records",
+        "sub": "name and season",
+        "tone": "existing",
+        "zone": "garden",
+        "x": 80,
+        "y": 140,
+        "w": 180,
+        "detail": {
+          "1": "Each plot has a name, a size, and a season.",
+          "3": "A plot record stores its name, size, and season label before anyone books it.",
+          "5": "The record is the identity key: name, size, and season label define the bookable plot."
+        },
+        "evidence": [
+          "E5"
+        ],
+        "confidence": "confirmed"
+      },
+      {
+        "id": "overlap",
+        "label": "Overlap rule",
+        "tone": "new",
+        "zone": "garden",
+        "x": 280,
+        "y": 140,
+        "detail": {
+          "1": "Two people cannot book the same plot at once.",
+          "3": "The new rule refuses a second active booking for the same plot and season.",
+          "5": "Exclusivity is enforced by rejecting a second active booking on the same plot-season pair."
+        },
+        "evidence": [
+          "E6"
+        ],
+        "confidence": "confirmed"
+      },
+      {
+        "id": "board",
+        "label": "Public board",
+        "tone": "external",
+        "zone": "hall",
+        "x": 620,
+        "y": 140,
+        "detail": {
+          "1": "A board shows which plots are free.",
+          "3": "The hall board lists free plots, and no task in this plan owns that requirement.",
+          "5": "The shared board is a read-only view of free plots and is not assigned to a task."
+        },
+        "evidence": [
+          "E8"
+        ],
+        "confidence": "inferred"
+      }
+    ],
+    "edges": [
+      {
+        "from": "plots",
+        "to": "overlap",
+        "label": "same season",
+        "tone": "existing"
+      },
+      {
+        "from": "overlap",
+        "to": "board",
+        "tone": "new"
+      }
+    ],
+    "steps": [
+      {
+        "nodes": [
+          "plots",
+          "overlap"
+        ],
+        "from": "plots",
+        "to": "overlap",
+        "text": {
+          "1": "A booking checks the plot record, then the overlap rule.",
+          "3": "The gardener picks a plot, and the overlap rule accepts only one active booking.",
+          "5": "Selection reads the plot record, then the overlap predicate admits at most one active booking."
+        },
+        "evidence": [
+          "E6"
+        ]
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "type": "prose",
+      "title": "What the plan covers",
+      "subtitle": {
+        "1": "One garden, one season, no payments.",
+        "3": "Scope is one garden and a paper calendar, without payments or accounts.",
+        "5": "The bounded scope is a single garden, a paper calendar, and no payment or account subsystem."
+      },
+      "evidence": [
+        "E3"
+      ],
+      "confidence": "confirmed",
+      "body": {
+        "1": "Neighbours reserve one plot for a season. Payments, maps, and accounts stay out.",
+        "3": "The outcome is a seasonal reservation. Payments, maps, and accounts are named non-goals.",
+        "5": "The specification limits the system to seasonal plot reservation and explicitly excludes payments, maps, and accounts."
+      }
+    },
+    {
+      "id": "shift",
+      "type": "change",
+      "title": "What changes",
+      "evidence": [
+        "E6"
+      ],
+      "confidence": "confirmed",
+      "now": [
+        {
+          "text": {
+            "1": "Plots are tracked with a name, a size, and a season.",
+            "3": "Today a plot is identified by its name, size, and season label.",
+            "5": "The current record already carries name, size, and season as the plot identity."
+          },
+          "evidence": [
+            "E5"
+          ],
+          "confidence": "confirmed",
+          "quote": {
+            "evidence": "E5",
+            "text": "Each plot has a name, a size, and a season label."
+          }
+        }
+      ],
+      "next": [
+        {
+          "text": {
+            "1": "A second booking for the same plot will be refused.",
+            "3": "Next, an overlap check refuses another active booking for that plot and season.",
+            "5": "The next rule rejects a second active booking when the plot and season already match."
+          },
+          "evidence": [
+            "E6"
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "unchanged": [
+        {
+          "text": {
+            "1": "A full plot still keeps a short waitlist.",
+            "3": "The waitlist stays in arrival order when a plot is already full.",
+            "5": "Waitlist ordering remains arrival order and is unchanged by the overlap rule."
+          },
+          "evidence": [
+            "E7"
+          ],
+          "confidence": "confirmed"
+        }
+      ]
+    },
+    {
+      "id": "flow",
+      "type": "diagram",
+      "title": "Booking flow",
+      "evidence": [
+        "E20"
+      ],
+      "confidence": "inferred",
+      "mermaid": "flowchart LR\n  plots[Plot records] --> overlap[Overlap rule]\n  overlap --> board[Public board]\n",
+      "caption": {
+        "1": "From the plot record to the overlap rule, then the board.",
+        "3": "The diagram links plot records, the overlap rule, and the public board.",
+        "5": "Control moves from the plot record through the overlap predicate to the read-only board."
+      },
+      "alt": "Plot records point to an overlap rule, which points to a public board of free plots."
+    },
+    {
+      "id": "coverage",
+      "type": "coverage",
+      "title": "Requirements and tasks",
+      "evidence": [
+        "E4"
+      ],
+      "confidence": "inferred",
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Each plot has a name, a size, and a season label.",
+          "tasks": [
+            "T1"
+          ],
+          "test": "yes",
+          "evidence": [
+            "E5"
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "id": "R2",
+          "text": "Two bookings for the same plot and season cannot both be active.",
+          "tasks": [
+            "T2"
+          ],
+          "test": "yes",
+          "evidence": [
+            "E6"
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "id": "R3",
+          "text": "A full plot keeps a waitlist in arrival order.",
+          "tasks": [
+            "T3"
+          ],
+          "test": "no",
+          "evidence": [
+            "E7"
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "id": "R4",
+          "text": "A shared board shows which plots are free.",
+          "tasks": [],
+          "test": "unknown",
+          "evidence": [
+            "E8"
+          ],
+          "confidence": "inferred"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "T1",
+          "label": "Booking data model",
+          "evidence": [
+            "E20"
+          ]
+        },
+        {
+          "id": "T2",
+          "label": "Booking overlap rule",
+          "evidence": [
+            "E21"
+          ]
+        },
+        {
+          "id": "T3",
+          "label": "Waitlist order",
+          "evidence": [
+            "E22"
+          ]
+        },
+        {
+          "id": "T4",
+          "label": "Overlap checks",
+          "evidence": [
+            "E23"
+          ]
+        },
+        {
+          "id": "T5",
+          "label": "Season calendar view",
+          "evidence": [
+            "E25"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "decisions",
+      "type": "decisions",
+      "title": "Choices",
+      "evidence": [
+        "E13"
+      ],
+      "confidence": "confirmed",
+      "items": [
+        {
+          "status": "chosen",
+          "title": "Keep plots on paper at the hall",
+          "why": {
+            "1": "Paper at the hall is enough for one garden.",
+            "3": "The review keeps plots on paper at the hall so the garden needs no accounts.",
+            "5": "Accepting paper records at the hall avoids an account store while the garden stays a single site."
+          },
+          "evidence": [
+            "E13"
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "status": "rejected",
+          "title": "Make the waitlist mandatory",
+          "why": {
+            "1": "A full plot can skip the waitlist.",
+            "3": "The review treats the waitlist as optional, so a mandatory queue was rejected.",
+            "5": "A mandatory waitlist was rejected because the accepted note leaves the queue optional."
+          },
+          "evidence": [
+            "E14"
+          ],
+          "confidence": "confirmed"
+        }
+      ]
+    },
+    {
+      "id": "risks",
+      "type": "risks",
+      "title": "Risks and open points",
+      "evidence": [
+        "E8"
+      ],
+      "confidence": "inferred",
+      "items": [
+        {
+          "kind": "risk",
+          "title": "The public board has no task",
+          "text": {
+            "1": "Nobody is assigned to build the shared board.",
+            "3": "Requirement R4 has no task, so the free-plot board may never be built.",
+            "5": "R4 is structurally uncovered: no task references it, so the board can ship missing."
+          },
+          "evidence": [
+            "E8"
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "kind": "open_question",
+          "title": "Who updates the paper calendar",
+          "text": {
+            "1": "The plan does not name who writes the calendar.",
+            "3": "It is still open which volunteer updates the paper calendar after a booking.",
+            "5": "Ownership of the paper-calendar write path is unspecified after a booking is accepted."
+          },
+          "evidence": [
+            "E1"
+          ],
+          "confidence": "unknown"
+        },
+        {
+          "kind": "assumption",
+          "title": "One garden only",
+          "text": {
+            "1": "The plan assumes a single garden.",
+            "3": "We assume one garden and one paper calendar, as the brief describes.",
+            "5": "The assumption of a single garden and one paper calendar bounds every later task."
+          },
+          "evidence": [
+            "E1"
+          ],
+          "confidence": "inferred"
+        }
+      ]
+    },
+    {
+      "id": "quiz",
+      "type": "quiz",
+      "title": "Check your reading",
+      "evidence": [
+        "E6"
+      ],
+      "confidence": "inferred",
+      "items": [
+        {
+          "q": {
+            "1": "Can two active bookings share one plot?",
+            "3": "May two active bookings exist for the same plot and season?",
+            "5": "Does the overlap rule allow two concurrent active bookings for one plot-season pair?"
+          },
+          "a": {
+            "1": "No. The second booking is refused.",
+            "3": "No. The overlap rule refuses the second active booking.",
+            "5": "No. The predicate rejects the later booking while the first remains active."
+          }
+        }
+      ]
+    }
+  ],
+  "glossary": [
+    {
+      "term": "Plot",
+      "definition": "One garden bed that a neighbour can book for a season."
+    },
+    {
+      "term": "Waitlist",
+      "definition": "A short queue kept in arrival order when a plot is full."
+    }
+  ]
+}
