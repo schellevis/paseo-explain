@@ -197,11 +197,24 @@ def _anchor_suffix(ids, index):
     return " " + " ".join(bits)
 
 
-def _any_flagged(explain, evidence):
-    index = _evidence_index(evidence)
-    found = []
-    _collect_ids(explain, found)
-    return any(index[eid]["flagged"] for eid in found if eid in index)
+def _flagged_fragments(evidence):
+    fragments = evidence.get("fragments") if isinstance(evidence, dict) else None
+    if not isinstance(fragments, list):
+        return []
+    return [frag for frag in fragments if isinstance(frag, dict) and bool(frag.get("flagged"))]
+
+
+def _flagged_meta(evidence):
+    found = _flagged_fragments(evidence)
+    anchors = []
+    for frag in found[:10]:
+        anchor = frag.get("anchor")
+        anchors.append(anchor if isinstance(anchor, str) else "")
+    return len(found), anchors
+
+
+def _any_flagged(_explain, evidence):
+    return bool(_flagged_fragments(evidence))
 
 
 def _banner_lines(meta, explain, evidence):
@@ -462,7 +475,9 @@ def _load_object(path, name):
         raise ExplainError(3, f"cannot read {name}: {exc}") from exc
 
 
-def _fact_counts(session_dir):
+def _fact_counts(session_dir, fact_check):
+    if fact_check not in ("pass", "partial"):
+        return None
     path = Path(session_dir) / "factcheck.json"
     if not path.is_file():
         return None
@@ -480,7 +495,7 @@ def _fact_counts(session_dir):
     return counts
 
 
-def _compose_meta(session, explain, computed, session_dir):
+def _compose_meta(session, explain, evidence, computed, session_dir):
     checks = computed.get("checks") if isinstance(computed, dict) and isinstance(computed.get("checks"), dict) else {}
     models = computed.get("models") if isinstance(computed, dict) and isinstance(computed.get("models"), dict) else {}
     theme = load_config()["values"].get("theme") or "dark"
@@ -488,6 +503,7 @@ def _compose_meta(session, explain, computed, session_dir):
     if not isinstance(grade, dict):
         grade = None
     lang = explain.get("lang") if isinstance(explain.get("lang"), str) else session.get("lang")
+    flagged_total, flagged_anchors = _flagged_meta(evidence)
     return {
         "version": __version__,
         "slug": session.get("slug"),
@@ -502,7 +518,9 @@ def _compose_meta(session, explain, computed, session_dir):
         "check_label": checks.get("check_label"),
         "skipped": checks.get("skipped"),
         "models": models,
-        "fact_counts": _fact_counts(session_dir),
+        "fact_counts": _fact_counts(session_dir, checks.get("fact_check")),
+        "flagged_total": flagged_total,
+        "flagged_anchors": flagged_anchors,
         "reader_grade": grade,
     }
 
@@ -555,7 +573,7 @@ def render(session_dir) -> dict:
         session["round"] = int(session.get("round") or 0) + 1
         session["content_sha256"] = digest
         save_session(root, session)
-    meta = _compose_meta(session, explain, computed, root)
+    meta = _compose_meta(session, explain, evidence, computed, root)
     html_text = _render_html(explain, evidence, meta)
     md_text = render_markdown(explain, evidence, meta, session.get("default_level"), for_reader=False)
     html_path = root / "explain.html"
@@ -601,7 +619,7 @@ def markdown_command(session_dir, level: int, to: str | None):
     explain = _load_object(root / "explain.json", "explain.json")
     evidence = _load_object(root / "evidence.json", "evidence.json")
     computed = _result_api().compute_result(str(root))
-    meta = _compose_meta(session, explain, computed, root)
+    meta = _compose_meta(session, explain, evidence, computed, root)
     text = render_markdown(explain, evidence, meta, level, for_reader=False)
     if to is None:
         return text

@@ -63,6 +63,8 @@ META_KEYS = {
     "skipped",
     "models",
     "fact_counts",
+    "flagged_total",
+    "flagged_anchors",
     "reader_grade",
 }
 PLAN_HEADINGS = [
@@ -80,7 +82,8 @@ PLAN_HEADINGS = [
 
 
 class ResultDouble:
-    def __init__(self):
+    def __init__(self, fact_check="skipped"):
+        self.fact_check = fact_check
         self.compute_notes = []
         self.write_notes = []
 
@@ -93,7 +96,9 @@ class ResultDouble:
                 "md": (root / "explain.md").is_file(),
             }
         )
-        return {"status": "failed", "checks": CHECKS, "models": MODELS}
+        checks = dict(CHECKS)
+        checks["fact_check"] = self.fact_check
+        return {"status": "failed", "checks": checks, "models": MODELS}
 
     def write_result(self, session_dir):
         root = Path(session_dir)
@@ -214,6 +219,31 @@ def _assert_single_pass(test, template, filled, values):
         filled_at += len(replacement)
         template_at = match.end()
     test.assertEqual(filled[filled_at:], template[template_at:])
+
+
+def _write_factcheck(session, verdicts):
+    report = {
+        "explain_report": 1,
+        "kind": "factcheck",
+        "model": "other/model",
+        "explain_sha256": "abc",
+        "claims": [
+            {
+                "ref": "/lead/text/3",
+                "claim": "claim",
+                "verdict": verdict,
+                "evidence": [],
+                "correction": None,
+            }
+            for verdict in verdicts
+        ],
+        "plan_checks": [],
+        "summary": "counted",
+    }
+    (Path(session) / "factcheck.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _undo_literal(payload):
@@ -557,6 +587,80 @@ class RenderTests(unittest.TestCase):
         self.assertLessEqual(len(sample["text"]), 800)
         self.assertEqual(len(double.write_notes), 2)
         self.assertTrue(all(note["html"] and note["md"] for note in double.write_notes))
+
+    def test_flagged_fragments_and_fact_counts(self):
+        from explainlib import render
+
+        idea = self.clone(self.idea_session, "idea-flags")
+        plan = self.clone(self.plan_session, "plan-flags")
+        with patched_result(ResultDouble()):
+            render.render(idea)
+            render.render(plan)
+        idea_page = json.loads(_payload((idea / "explain.html").read_text(encoding="utf-8")))
+        plan_page = json.loads(_payload((plan / "explain.html").read_text(encoding="utf-8")))
+        evidence = json.loads((idea / "evidence.json").read_text(encoding="utf-8"))
+        flagged = [frag for frag in evidence["fragments"] if frag.get("flagged")]
+        self.assertEqual([frag["anchor"] for frag in flagged], ["¶3"])
+        self.assertEqual(idea_page["meta"]["flagged_total"], 1)
+        self.assertEqual(idea_page["meta"]["flagged_anchors"], ["¶3"])
+        self.assertNotIn(flagged[0]["id"], idea_page["evidence"])
+        self.assertIsNone(idea_page["meta"]["fact_counts"])
+        self.assertIn(
+            "> Contains instruction-like text in the sources; treated as data",
+            (idea / "explain.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(plan_page["meta"]["flagged_total"], 0)
+        self.assertEqual(plan_page["meta"]["flagged_anchors"], [])
+        self.assertNotIn(
+            "instruction-like",
+            (plan / "explain.md").read_text(encoding="utf-8"),
+        )
+
+        skipped = self.clone(self.plan_session, "skipped-facts")
+        verdicts = ["verified", "verified", "corrected", "unsupported", "unverifiable", "other"]
+        _write_factcheck(skipped, verdicts)
+        with patched_result(ResultDouble("skipped")):
+            render.render(skipped)
+        skipped_meta = json.loads(_payload((skipped / "explain.html").read_text(encoding="utf-8")))["meta"]
+        self.assertIsNone(skipped_meta["fact_counts"])
+
+        stale = self.clone(self.plan_session, "stale-facts")
+        _write_factcheck(stale, verdicts)
+        with patched_result(ResultDouble("stale")):
+            render.render(stale)
+        stale_meta = json.loads(_payload((stale / "explain.html").read_text(encoding="utf-8")))["meta"]
+        self.assertIsNone(stale_meta["fact_counts"])
+
+        counted = self.clone(self.plan_session, "counted-facts")
+        _write_factcheck(counted, verdicts)
+        with patched_result(ResultDouble("partial")):
+            render.render(counted)
+        counted_meta = json.loads(_payload((counted / "explain.html").read_text(encoding="utf-8")))["meta"]
+        self.assertEqual(
+            counted_meta["fact_counts"],
+            {"verified": 2, "corrected": 1, "unsupported": 1, "unverifiable": 1},
+        )
+
+        many = self.clone(self.plan_session, "many-flags")
+        stored = json.loads((many / "evidence.json").read_text(encoding="utf-8"))
+        base = stored["fragments"][0]
+        extras = []
+        for index in range(12):
+            frag = copy.deepcopy(base)
+            frag["id"] = f"Z{index}"
+            frag["anchor"] = f"¶{index}"
+            frag["flagged"] = True
+            extras.append(frag)
+        stored["fragments"] = extras + stored["fragments"]
+        (many / "evidence.json").write_text(
+            json.dumps(stored, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        with patched_result(ResultDouble()):
+            render.render(many)
+        many_meta = json.loads(_payload((many / "explain.html").read_text(encoding="utf-8")))["meta"]
+        self.assertEqual(many_meta["flagged_total"], 12)
+        self.assertEqual(many_meta["flagged_anchors"], [f"¶{index}" for index in range(10)])
 
     def test_round_increments_only_when_content_changes(self):
         from explainlib import render
