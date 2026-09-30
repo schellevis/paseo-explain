@@ -1,0 +1,505 @@
+{
+  "explain_report": 1,
+  "kind": "factcheck",
+  "model": "codex/gpt-example",
+  "explain_sha256": "REPLACE",
+  "claims": [
+    {
+      "ref": "/lead/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/lead/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/lead/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/facts/0/value",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/facts/1/value",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/0/detail/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/0/detail/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/0/detail/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/1/detail/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/1/detail/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/1/detail/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/2/detail/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/2/detail/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/nodes/2/detail/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/steps/0/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/steps/0/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/hero/steps/0/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/0/body/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/0/body/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/0/body/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/now/0/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/now/0/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/now/0/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/next/0/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/next/0/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/next/0/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/unchanged/0/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/unchanged/0/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/1/unchanged/0/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/2/mermaid",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/2/alt",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/3/requirements/0/text",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/3/requirements/1/text",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/3/requirements/2/text",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/3/requirements/3/text",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/4/items/0/title",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/4/items/0/why/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/4/items/0/why/3",
+      "claim": "The written reason at this level is replaced.",
+      "verdict": "corrected",
+      "evidence": [
+        "E1"
+      ],
+      "correction": "Gardeners keep one written reason so the chosen rule stays easy to explain at this level without adding extra claims."
+    },
+    {
+      "ref": "/sections/4/items/0/why/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/4/items/1/title",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/4/items/1/why/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/4/items/1/why/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/4/items/1/why/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/0/title",
+      "claim": "This risk item is not supported by the evidence.",
+      "verdict": "unsupported",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/0/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/0/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/0/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/1/title",
+      "claim": "This risk item is not supported by the evidence.",
+      "verdict": "unsupported",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/1/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/1/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/1/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/2/title",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/2/text/1",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/2/text/3",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    },
+    {
+      "ref": "/sections/5/items/2/text/5",
+      "claim": "This leaf matches the evidence.",
+      "verdict": "verified",
+      "evidence": [
+        "E1"
+      ],
+      "correction": null
+    }
+  ],
+  "plan_checks": [],
+  "summary": "One reason is corrected and two risk items are unsupported."
+}

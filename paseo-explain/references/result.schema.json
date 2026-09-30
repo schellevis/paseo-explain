@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paseo-explain.invalid/result.schema.json",
+  "title": "result.json",
+  "description": "Documentation schema for the paseo-explain result contract (explain_contract 1). The runtime writer is explainlib.result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "explain_contract",
+    "version",
+    "status",
+    "kind",
+    "doc",
+    "slug",
+    "round",
+    "mode",
+    "levels",
+    "default_level",
+    "lang",
+    "urls",
+    "tab_opened",
+    "paths",
+    "checks",
+    "models",
+    "findings",
+    "generated_at"
+  ],
+  "properties": {
+    "explain_contract": {
+      "const": 1
+    },
+    "version": {
+      "const": "0.1.0"
+    },
+    "status": {
+      "enum": ["ok", "partial", "failed"]
+    },
+    "kind": {
+      "enum": ["plan", "idea"]
+    },
+    "doc": {
+      "anyOf": [
+        {"enum": ["spec", "plan"]},
+        {"type": "null"}
+      ]
+    },
+    "slug": {
+      "type": "string"
+    },
+    "round": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mode": {
+      "enum": ["quick", "standard", "deep"]
+    },
+    "levels": {
+      "type": "array",
+      "items": {"type": "integer"}
+    },
+    "default_level": {
+      "type": "integer"
+    },
+    "lang": {
+      "type": "string"
+    },
+    "urls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["local", "public"],
+      "properties": {
+        "local": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "public": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+      }
+    },
+    "tab_opened": {
+      "anyOf": [{"type": "boolean"}, {"type": "null"}]
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session", "html", "md", "export"],
+      "properties": {
+        "session": {"type": "string"},
+        "html": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "md": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "export": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validate",
+        "fact_check",
+        "fact_check_corrections",
+        "reader_test",
+        "independent",
+        "check_label",
+        "skipped"
+      ],
+      "properties": {
+        "validate": {"enum": ["pass", "fail", "stale"]},
+        "fact_check": {"enum": ["pass", "partial", "stale", "skipped"]},
+        "fact_check_corrections": {"type": "integer", "minimum": 0},
+        "reader_test": {"enum": ["pass", "partial", "stale", "skipped"]},
+        "independent": {"type": "boolean"},
+        "check_label": {
+          "enum": [
+            "not_checked",
+            "independence_unknown",
+            "same_family",
+            "independent",
+            "independent_corrected"
+          ]
+        },
+        "skipped": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fact_check", "reader_test"],
+          "properties": {
+            "fact_check": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+            "reader_test": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+          }
+        }
+      }
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact_checker", "reader", "orchestrator"],
+      "properties": {
+        "fact_checker": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "reader": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "orchestrator": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "ref", "text"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "requirement_without_task",
+              "task_without_requirement",
+              "requirement_without_test",
+              "unsupported_claim",
+              "contradiction",
+              "open_question",
+              "flagged_content"
+            ]
+          },
+          "ref": {"type": "string"},
+          "text": {"type": "string"}
+        }
+      }
+    },
+    "generated_at": {
+      "type": "string"
+    }
+  }
+}

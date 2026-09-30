@@ -1,0 +1,24 @@
+{
+  "explain_report": 1,
+  "kind": "reader",
+  "model": "cursor/reader-example",
+  "explain_sha256": "REPLACE",
+  "level": 3,
+  "answers": [
+    {
+      "q": 0,
+      "answer": "No fee is charged."
+    },
+    {
+      "q": 1,
+      "answer": "The calendar stays at the hall."
+    },
+    {
+      "q": 2,
+      "answer": "The plan assumes one garden."
+    }
+  ],
+  "undefined_terms": [],
+  "hard_to_follow": [],
+  "summary": "A neighbour can follow the booking rules at the mixed level."
+}
