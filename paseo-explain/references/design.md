@@ -1,0 +1,11 @@
+# Design and writing
+
+Read this while choosing the story, diagram and language of an explanation.
+
+Aim for density “4/10: enough to be complete, not so dense it needs a guide”. Put the concrete outcome first and keep each section to one claim. Start with a worked example before internal mechanisms when that helps the reader. The hero has at most nine nodes; “one or two accent (`new`) nodes carry the story; use `new` only for what the plan adds”. Distinguish existing, new and external zones and nodes. Use no more than one diagram per section. Every caption states the claim of its figure.
+
+For Mermaid, use `flowchart`, `graph`, `sequenceDiagram`, `stateDiagram-v2`, `mindmap` or `timeline`. Always quote node labels as `id["label"]`. Never include `click`, `%%{init}` or `<`. Stay within 25 nodes and 40 nonempty lines; use top-down layout for narrow content. Provide an `alt` text equivalent, since diagrams may fall back to source text offline or on parse failure.
+
+At level 1, Simple (B1), use sentences of at most 15 words, no unexplained jargon, and a concrete example first. At level 2, Accessible, keep short sentences and define necessary terms. At level 3, Mixed, connect the example to the main mechanism and decision. At level 4, Technical, name interfaces and constraints precisely while retaining signposts. At level 5, Expert, use precise terms, no analogies, and dense but traceable detail. Write the same supported claims at every written level; change explanation depth, not certainty.
+
+The page uses a dark default with a light toggle, system fonts, evidence chips and a source side panel. Colour should identify existing, new, external, risk and open-question meaning without being the only cue. Keep labels short and supply text equivalents. The visual reference's palette, shape and depth tokens were adapted from `konraddzbik/architecture-diagram-skill` (MIT, Copyright (c) 2026 Konrad Dzbik). Density and accent rules credit `cathrynlavery/diagram-design` (MIT, Copyright (c) 2025 Cathryn Lavery); the validated-spec rendering and fact-check ideas credit `nicobailon/visual-explainer` (MIT, Copyright (c) 2025 Nico Bailon). The latter two are idea credits, with no copied code; see [third-party licences](../../THIRD_PARTY_LICENSES.md).
