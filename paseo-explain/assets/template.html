@@ -1,0 +1,1552 @@
+<!--
+Palette, shape and depth tokens, and the light and dark palettes, are adapted from konraddzbik/architecture-diagram-skill (MIT).
+See THIRD_PARTY_LICENSES.md.
+-->
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{NONCE}}' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="paseo-explain" content="0.1.0">
+<title>{{TITLE}}</title>
+<style>
+:root{--bg:#0a0d12;--bg-2:#0f1419;--panel:#121821;--panel-2:#182030;--border:#1f2937;--border-2:#2a3650;--text:#e6edf7;--muted:#8492a8;--dim:#5a6679;
+--mint:#46f9b8;--sky:#6aa9ff;--mag:#ff6b8a;--amber:#ffc14d;--violet:#b388ff;--brand-violet:#a201ff;
+--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--sans:system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 var(--sans);min-height:100vh;
+background-image:radial-gradient(1200px 600px at 15% -10%,rgba(106,169,255,.07),transparent 60%),radial-gradient(1000px 500px at 100% 0%,rgba(162,1,255,.06),transparent 60%),radial-gradient(800px 600px at 50% 120%,rgba(70,249,184,.04),transparent 60%)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%)}
+.top{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;padding:10px 28px;background:rgba(10,13,18,.82);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font:12px var(--mono)}
+.top b{color:var(--text);letter-spacing:.06em}.top .sp{flex:1}.top nav a{color:var(--muted);text-decoration:none;margin-left:14px}.top nav a:hover{color:var(--mint)}
+.badge{border:1px solid var(--border);border-radius:99px;padding:3px 10px;color:var(--muted);background:rgba(255,255,255,.015)}
+.tbtn{font:11px var(--mono);border:1px solid var(--border);background:var(--panel);color:var(--muted);border-radius:99px;padding:3px 10px;cursor:pointer}.tbtn:hover{color:var(--text);border-color:var(--border-2)}
+main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:30px 28px 80px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font:11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.015)}
+.kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+h1{font:600 clamp(28px,3.6vw,44px)/1.08 var(--sans);letter-spacing:-.02em;margin:16px 0 12px;background:linear-gradient(90deg,var(--mint),var(--sky) 50%,var(--brand-violet));-webkit-background-clip:text;background-clip:text;color:transparent;display:block;width:fit-content}
+.lead{color:#c3cddd;font-size:17px;max-width:72ch;margin:0 0 22px}
+.facts{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 26px;padding:0;list-style:none}
+.facts li{font:10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 12px}.facts li b{display:block;color:var(--text);font:500 14px var(--sans);letter-spacing:0;text-transform:none;margin-top:2px}
+.hero{position:relative;background:radial-gradient(800px 400px at 50% 20%,rgba(106,169,255,.06),transparent 60%),linear-gradient(180deg,var(--panel),var(--bg-2));border:1px solid var(--border);border-radius:18px;padding:18px 20px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(circle at 50% 40%,#000 30%,transparent 80%)}
+.hero svg{position:relative;width:100%;height:auto;display:block;touch-action:none;user-select:none}
+.hero .cap{position:relative;font:11px var(--mono);color:var(--dim);margin:4px 2px}
+.hh{position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.hh .t{font:11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.player{display:flex;gap:6px;align-items:center;font:11px var(--mono);color:var(--muted)}
+.player button{border:1px solid var(--border);background:var(--panel-2);color:var(--muted);cursor:pointer;height:30px;min-width:30px;padding:0 10px;border-radius:8px;font:11px var(--mono)}
+.player button:hover{color:var(--text);border-color:var(--border-2)}.player button.on{background:rgba(70,249,184,.12);border-color:var(--mint);color:var(--mint)}
+.stepbox{position:relative;margin-top:8px;border:1px solid var(--border);border-left:3px solid var(--mint);background:rgba(70,249,184,.04);border-radius:10px;padding:10px 14px;font-size:14px;color:#c3cddd;min-height:44px}
+.stepbox .i{font:600 11px var(--mono);color:var(--mint);margin-right:8px}
+.progress{position:relative;height:3px;background:var(--border);border-radius:2px;margin-top:8px}.progress i{display:block;height:100%;width:0;background:var(--mint);box-shadow:0 0 8px rgba(70,249,184,.4);transition:width .35s}
+.n rect{fill:var(--panel-2);stroke:var(--border-2);stroke-width:1.2;transition:all .25s}.n text{font:500 14px var(--sans);fill:var(--text)}.n .sub{font:11px var(--mono);fill:var(--muted)}
+.n.new rect{stroke:var(--mint);fill:rgba(70,249,184,.06)}.n.external rect{stroke:var(--sky);stroke-dasharray:4 3}
+.n{cursor:grab;transition:opacity .3s}.n.drag{cursor:grabbing}.n:hover rect,.n.sel rect{stroke:var(--sky);stroke-width:2}
+.n.lit rect{stroke:var(--mint);stroke-width:2.2;filter:drop-shadow(0 0 10px rgba(70,249,184,.55))}.dimmed .n:not(.lit){opacity:.35}
+.e{stroke:#3a4760;stroke-width:1.4;fill:none}.e.new{stroke:var(--mint);stroke-opacity:.7;stroke-dasharray:5 5;animation:dash 1.2s linear infinite}@keyframes dash{to{stroke-dashoffset:-20}}
+@media (prefers-reduced-motion: reduce){.e.new{animation:none}}
+.el{font:11px var(--mono);fill:var(--dim)}.zone{fill:none;stroke:var(--border-2);stroke-dasharray:3 5}.zone.new{stroke:var(--mint);stroke-opacity:.5}.zl{font:10px var(--mono);letter-spacing:.16em;fill:var(--dim)}.zl.new{fill:var(--mint)}
+.pkt{fill:var(--mint);filter:drop-shadow(0 0 6px var(--mint))}
+section{margin-top:48px}h2{font:600 22px/1.2 var(--sans);letter-spacing:-.01em;margin:0 0 4px}.sub2{color:var(--muted);margin:0 0 16px;font-size:14.5px}
+.num{font:600 11px var(--mono);color:var(--mint);margin-right:10px;border:1px solid rgba(70,249,184,.35);border-radius:6px;padding:2px 6px;vertical-align:3px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.col,.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.col h3{margin:0 0 8px;font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}.col.next{border-color:rgba(70,249,184,.45)}.col.next h3{color:var(--mint)}
+.col ul{margin:0;padding-left:18px;color:#c3cddd}.col li{margin:4px 0}.col li::marker{color:var(--dim)}
+.mm{display:flex;justify-content:center}.mm svg{width:100%!important;max-width:880px!important;height:auto!important}.mm pre{width:100%;margin:0;display:flex;justify-content:center}
+table{border-collapse:separate;border-spacing:0;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;font-size:14px}
+th{font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--bg-2)}
+th,td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:center}th:first-child,td:first-child,td:nth-child(2){text-align:left}tr:last-child td{border-bottom:0}
+tr.r{cursor:pointer}tr.r:hover,tr.r.sel{background:rgba(106,169,255,.07)}td.x{color:var(--sky);text-shadow:0 0 8px rgba(106,169,255,.6)}td.gap{color:var(--mag);font:600 11px var(--mono)}td.okc{color:var(--mint)}
+.dec{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.dec .card.chosen{border-color:var(--mint);box-shadow:0 0 0 1px rgba(70,249,184,.25),0 0 30px rgba(70,249,184,.08)}
+.dec .k,.risks .k{font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}.dec .chosen .k{color:var(--mint)}.dec h4,.risks h4{margin:4px 0 6px;font-size:15.5px}.dec p,.risks p{margin:0;font-size:14px;color:var(--muted)}
+.risks{display:grid;grid-template-columns:1fr 1fr;gap:14px}.risks .card.risk .k{color:var(--mag)}.risks .card.open_question .k{color:var(--amber)}.risks .card.assumption .k{color:var(--violet)}
+details{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:10px}summary{cursor:pointer;font-weight:500}summary::marker{color:var(--mint)}details p{color:var(--muted);margin:8px 0 0}
+.chip{font:600 10.5px var(--mono);border:1px solid var(--border-2);background:rgba(255,255,255,.04);color:var(--muted);border-radius:6px;padding:1px 6px;margin:0 2px;cursor:pointer}.chip:hover{border-color:var(--sky);color:var(--sky)}
+aside{position:fixed;top:0;right:0;height:100%;width:380px;max-width:92vw;background:var(--panel);border-left:1px solid var(--border-2);box-shadow:-20px 0 60px rgba(0,0,0,.5);transform:translateX(105%);transition:transform .22s;z-index:10;padding:22px;overflow:auto}
+aside.open{transform:none}aside .x{float:right;border:0;background:none;font-size:20px;cursor:pointer;color:var(--muted)}aside h3{margin:10px 0 6px;font:600 20px var(--sans)}aside p{color:#c3cddd}
+aside .src{background:var(--bg-2);border:1px solid var(--border);border-left:3px solid var(--sky);border-radius:8px;padding:8px 10px;margin:10px 0;font-size:13px;color:var(--muted);white-space:pre-wrap}aside .src b{font-family:var(--mono);color:var(--sky)}
+aside .src.flagged{border-left-color:var(--amber)}
+.note{font:11px var(--mono);color:var(--dim);margin-top:50px;border-top:1px solid var(--border);padding-top:12px}
+@media(max-width:760px){.cols,.dec,.risks{grid-template-columns:1fr}.top nav{display:none}}
+/* light theme */
+body.light{--bg:#f6f7fa;--bg-2:#ffffff;--panel:#ffffff;--panel-2:#f1f3f8;--border:#e2e6ee;--border-2:#c8d0dd;--text:#0f1419;--muted:#555f70;--dim:#8492a8;--mint:#00b377;--sky:#2a6fdb;--mag:#d63a5f;--amber:#c98a00;--violet:#7a4ed1;--brand-violet:#7a1cd9;
+background-image:radial-gradient(1200px 600px at 15% -10%,rgba(42,111,219,.06),transparent 60%),radial-gradient(1000px 500px at 100% 0%,rgba(122,28,217,.05),transparent 60%)}
+body.light::before{background-image:linear-gradient(rgba(15,20,25,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(15,20,25,.035) 1px,transparent 1px)}
+body.light .top{background:rgba(246,247,250,.85)}
+body.light .lead,body.light .col ul,body.light aside p,body.light .stepbox{color:#2b3442}
+body.light .hero{background:linear-gradient(180deg,#fff,#f8f9fc);box-shadow:0 10px 30px rgba(15,20,25,.08)}
+body.light .hero::before{background-image:linear-gradient(rgba(15,20,25,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(15,20,25,.04) 1px,transparent 1px)}
+body.light .col,body.light .card{box-shadow:0 6px 20px rgba(15,20,25,.06)}
+body.light .e{stroke:#9aa5b8} body.light .n.new rect{fill:rgba(0,179,119,.07)}
+body.light .n.lit rect{filter:drop-shadow(0 0 8px rgba(0,179,119,.45))} body.light .pkt{filter:drop-shadow(0 0 5px rgba(0,179,119,.8))}
+body.light .dec .card.chosen{box-shadow:0 0 0 1px rgba(0,179,119,.25),0 8px 24px rgba(0,179,119,.10)}
+body.light .stepbox{background:rgba(0,179,119,.05)} body.light aside{box-shadow:-20px 0 60px rgba(15,20,25,.15)}
+body.light td.x{text-shadow:none} body.light tr.r:hover,body.light tr.r.sel{background:rgba(42,111,219,.06)}
+
+
+.figcap{position:relative;font:11px var(--mono);color:var(--dim);margin:8px 2px 0}
+button.chip{font:600 10.5px var(--mono);letter-spacing:0;text-transform:none;border:1px solid var(--border-2);background:rgba(255,255,255,.04);color:var(--muted);border-radius:6px;padding:1px 6px;margin:0 2px;cursor:pointer}
+button.chip:hover{border-color:var(--sky);color:var(--sky)}
+.tbtn.on{color:var(--mint);border-color:var(--mint)}
+.tbtn:disabled{opacity:.38;cursor:not-allowed}
+.levels{display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center}
+.banner{border:1px solid var(--border);border-left:3px solid var(--sky);background:var(--panel);border-radius:10px;padding:10px 14px;margin:0 0 22px;color:var(--muted);font-size:14px}
+.banner p{margin:4px 0}
+.banner .flag{color:var(--amber)}
+.conf{font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-right:6px}
+.evrow{margin:6px 0 10px}
+abbr.term{border-bottom:1px dotted var(--muted);text-decoration:none;cursor:help}
+.facts .chip,.facts .conf,.facts .evrow,.facts .term{text-transform:none;letter-spacing:0}
+.prose p{margin:0 0 12px;color:#c3cddd}
+body.light .prose p{color:#2b3442}
+.mmnote{font:12px var(--mono);color:var(--amber);margin:8px 0}
+.mmnote:empty{display:none}
+.cov{overflow-x:auto}
+.gap{color:var(--mag);font:600 11px var(--mono)}
+th .chip.sel,.chip.sel{border-color:var(--sky);color:var(--sky)}
+.n:focus{outline:none}
+.n:focus rect{stroke:var(--sky);stroke-width:2}
+.pkt.hide{opacity:0}
+.e,.el,.zone,.zl,.pkt{pointer-events:none}
+aside .actions{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+aside .actions button{font:13px var(--sans);text-align:left;border:1px solid var(--border);background:var(--panel-2);color:var(--text);border-radius:8px;padding:8px 10px;cursor:pointer}
+aside .actions button:hover{border-color:var(--sky)}
+.copybox{width:100%;margin-top:10px;font:12px var(--mono);color:var(--text);background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px}
+h1 .term{background:linear-gradient(90deg,var(--mint),var(--sky) 50%,var(--brand-violet));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;border-bottom-color:var(--sky)}
+.top{flex-wrap:wrap}
+dl{margin:0}
+dt{font-weight:600;margin-top:10px}
+dd{margin:2px 0 0;color:var(--muted)}
+@media print{
+.top,.player,aside,.tbtn{display:none}
+body{background:#fff;color:#111;--text:#111;--muted:#333;--dim:#444;--bg:#fff;--panel:#fff;--panel-2:#f6f7fa;--border:#ccc;--border-2:#bbb}
+body::before{display:none}
+h1,h1 .term{background:none;color:#111;-webkit-text-fill-color:#111}
+.lead,.prose p,.col ul,.stepbox{color:#222}
+details,details > *{display:block !important}
+details{break-inside:avoid}
+}
+
+</style>
+</head>
+<body>
+<script src="{{MERMAID_SRC}}" integrity="{{MERMAID_SRI}}" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script type="application/json" id="pe-data">{{DATA_JSON}}</script>
+<script nonce="{{NONCE}}">
+(function () {
+  "use strict";
+
+  var data = JSON.parse(document.getElementById('pe-data').textContent);
+  if (!data || typeof data !== "object") data = {};
+  var explain = data.explain || {};
+  var evidence = data.evidence || {};
+  var meta = data.meta || {};
+
+  var STR = {
+    en: {
+      explanation: "Explanation",
+      planSpec: "plan + spec",
+      idea: "idea",
+      notGenerated: "not generated at this level",
+      overview: "Overview",
+      reset: "Reset layout",
+      prev: "Previous",
+      play: "Play",
+      pause: "Pause",
+      next: "Next",
+      now: "Now",
+      unchanged: "Unchanged",
+      textVersion: "Text version",
+      glossary: "Glossary",
+      chosen: "Chosen",
+      rejected: "Rejected",
+      risk: "Risk",
+      openQuestion: "Open question",
+      assumption: "Assumption",
+      inferred: "inferred",
+      unknown: "unknown",
+      userStatement: "user statement",
+      simpler: "Simpler",
+      why: "Why this way?",
+      drop: "What if we drop this?",
+      close: "Close",
+      theme: "Theme",
+      noTask: "no task",
+      noTest: "no test",
+      requirement: "Requirement",
+      test: "Test",
+      diagramOffline: "Diagram library could not be loaded (offline?)",
+      diagramDraw: "Diagram could not be drawn",
+      flagged: "Contains instruction-like text in the sources; treated as data",
+      flaggedMark: "flagged",
+      independent: "Fact-checked by {model} (another model family): {v} verified · {c} corrected",
+      correctedSuffix: "; {n} corrections applied afterwards by the explainer (not re-checked)",
+      sameFamily: "Checked by the same model family ({model})",
+      indepUnknown: "Fact-checked by {model}; independence unknown",
+      notChecked: "Not independently checked",
+      skip: "Fact-check skipped: {reason}",
+      reader: "Reader test: {correct}/{total} questions answered",
+      step: "Step",
+      evidence: "Evidence",
+      followup: "Follow-up prompt",
+      lines: "Lines",
+      levels: {1: "Simple (B1)", 2: "Accessible", 3: "Mixed", 4: "Technical", 5: "Expert"}
+    },
+    nl: {
+      explanation: "Uitleg",
+      planSpec: "plan + specificatie",
+      idea: "idee",
+      notGenerated: "niet gegenereerd op dit niveau",
+      overview: "Overzicht",
+      reset: "Indeling herstellen",
+      prev: "Vorige",
+      play: "Afspelen",
+      pause: "Pauze",
+      next: "Volgende",
+      now: "Nu",
+      unchanged: "Ongewijzigd",
+      textVersion: "Tekstversie",
+      glossary: "Woordenlijst",
+      chosen: "Gekozen",
+      rejected: "Afgewezen",
+      risk: "Risico",
+      openQuestion: "Open vraag",
+      assumption: "Aanname",
+      inferred: "afgeleid",
+      unknown: "onbekend",
+      userStatement: "gebruikersuitspraak",
+      simpler: "Eenvoudiger",
+      why: "Waarom zo?",
+      drop: "Wat als we dit laten vallen?",
+      close: "Sluiten",
+      theme: "Thema",
+      noTask: "geen taak",
+      noTest: "geen test",
+      requirement: "Eis",
+      test: "Test",
+      diagramOffline: "Diagrambibliotheek kon niet worden geladen (offline?)",
+      diagramDraw: "Diagram kon niet worden getekend",
+      flagged: "Bevat instructie-achtige tekst in de bronnen; behandeld als data",
+      flaggedMark: "gemarkeerd",
+      independent: "Feitencheck door {model} (een andere modelfamilie): {v} geverifieerd · {c} gecorrigeerd",
+      correctedSuffix: "; {n} correcties daarna toegepast door de uitlegger (niet opnieuw gecontroleerd)",
+      sameFamily: "Gecontroleerd door dezelfde modelfamilie ({model})",
+      indepUnknown: "Feitencheck door {model}; onafhankelijkheid onbekend",
+      notChecked: "Niet onafhankelijk gecontroleerd",
+      skip: "Feitencheck overgeslagen: {reason}",
+      reader: "Lezerstest: {correct}/{total} vragen beantwoord",
+      step: "Stap",
+      evidence: "Bewijs",
+      followup: "Vervolgprompt",
+      lines: "Regels",
+      levels: {1: "Eenvoudig (B1)", 2: "Toegankelijk", 3: "Gemengd", 4: "Technisch", 5: "Expert"}
+    }
+  };
+
+  var THEME_VARS = {
+    dark: {
+      darkMode: true, background: "#121821", primaryColor: "#182030", primaryBorderColor: "#2a3650",
+      primaryTextColor: "#e6edf7", secondaryColor: "#182030", tertiaryColor: "#0f1419", lineColor: "#5a6679",
+      textColor: "#e6edf7", clusterBkg: "#0f1419", clusterBorder: "#2a3650", titleColor: "#8492a8",
+      edgeLabelBackground: "#121821", actorBkg: "#182030", actorBorder: "#6aa9ff", actorTextColor: "#e6edf7",
+      actorLineColor: "#2a3650", signalColor: "#8492a8", signalTextColor: "#e6edf7", labelBoxBkgColor: "#182030",
+      labelBoxBorderColor: "#46f9b8", labelTextColor: "#46f9b8", loopTextColor: "#8492a8", noteBkgColor: "#182030",
+      noteTextColor: "#e6edf7", fontFamily: "system-ui,sans-serif", fontSize: "14px"
+    },
+    light: {
+      darkMode: false, background: "#ffffff", primaryColor: "#f1f3f8", primaryBorderColor: "#c8d0dd",
+      primaryTextColor: "#0f1419", secondaryColor: "#f1f3f8", tertiaryColor: "#ffffff", lineColor: "#8492a8",
+      textColor: "#0f1419", clusterBkg: "#f8f9fc", clusterBorder: "#e2e6ee", titleColor: "#555f70",
+      edgeLabelBackground: "#ffffff", actorBkg: "#f1f3f8", actorBorder: "#2a6fdb", actorTextColor: "#0f1419",
+      actorLineColor: "#c8d0dd", signalColor: "#555f70", signalTextColor: "#0f1419", labelBoxBkgColor: "#ffffff",
+      labelBoxBorderColor: "#00b377", labelTextColor: "#00896b", loopTextColor: "#555f70", noteBkgColor: "#f1f3f8",
+      noteTextColor: "#0f1419", fontFamily: "system-ui,sans-serif", fontSize: "14px"
+    }
+  };
+  var THEME_CSS = {
+    dark: ".critical{fill:#0f2a24;stroke:#46f9b8;stroke-width:2px;color:#e6edf7}",
+    light: ".critical{fill:#e6f7f0;stroke:#00b377;stroke-width:2px;color:#0f1419}"
+  };
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var SVG_TAGS = {svg: 1, g: 1, rect: 1, text: 1, line: 1, path: 1, circle: 1, defs: 1, marker: 1, title: 1};
+  var ATTR_OK = {
+    "class": 1, id: 1, role: 1, tabindex: 1, title: 1, href: 1, viewBox: 1,
+    x: 1, y: 1, x1: 1, y1: 1, x2: 1, y2: 1, cx: 1, cy: 1, r: 1, rx: 1, ry: 1,
+    width: 1, height: 1, d: 1, transform: 1, "marker-end": 1, markerWidth: 1, markerHeight: 1,
+    refX: 1, refY: 1, orient: 1, "text-anchor": 1, "dominant-baseline": 1
+  };
+
+  function allowedAttr(name) {
+    if (ATTR_OK[name]) return true;
+    if (name.indexOf("aria-") === 0) return true;
+    if (name.indexOf("data-") === 0) return true;
+    return false;
+  }
+
+  function setAttr(node, name, val) {
+    if (!allowedAttr(name) || val == null || val === false) return;
+    if (name === "href" && (typeof val !== "string" || val.charAt(0) !== "#")) return;
+    node.setAttribute(name, String(val));
+  }
+
+  function el(tag, attrs) {
+    var node = SVG_TAGS[tag] ? document.createElementNS(SVG_NS, tag) : document.createElement(tag);
+    var key, child, i;
+    attrs = attrs || {};
+    for (key in attrs) {
+      if (Object.prototype.hasOwnProperty.call(attrs, key)) setAttr(node, key, attrs[key]);
+    }
+    if (tag === "button") node.type = "button";
+    for (i = 2; i < arguments.length; i++) {
+      child = arguments[i];
+      if (child == null || child === false) continue;
+      if (typeof child === "string" || typeof child === "number") node.appendChild(document.createTextNode(String(child)));
+      else node.appendChild(child);
+    }
+    return node;
+  }
+
+  function arr(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function fill(s, map) {
+    return String(s).replace(/\{(\w+)\}/g, function (_, k) {
+      return map[k] == null ? "" : String(map[k]);
+    });
+  }
+
+  var langCode = String(meta.lang || explain.lang || "en");
+  var nl = langCode.toLowerCase().indexOf("nl") === 0;
+  var L = nl ? STR.nl : STR.en;
+  function t(key) { return L[key]; }
+
+  var written = arr(explain.levels);
+  if (!written.length) written = arr(meta.levels);
+  if (!written.length) written = [1, 3, 5];
+
+  var mem = {};
+  function storageGet(key) {
+    if (Object.prototype.hasOwnProperty.call(mem, key)) return mem[key];
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function storageSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      delete mem[key];
+    } catch (e) {
+      mem[key] = value;
+    }
+  }
+  function storageDel(key) {
+    try { localStorage.removeItem(key); } catch (e) {}
+    mem[key] = null;
+  }
+
+  var storedLevel = parseInt(storageGet("paseo-explain.level"), 10);
+  var fallbackLevel = written.indexOf(meta.default_level) >= 0 ? meta.default_level : written[0];
+  var level = written.indexOf(storedLevel) >= 0 ? storedLevel : fallbackLevel;
+  var storedTheme = storageGet("paseo-explain.theme");
+  var theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : (meta.theme === "light" ? "light" : "dark");
+
+  var leveled = [];
+  var diagrams = [];
+  var mermaidGen = 0;
+  var nodeMap = {};
+  var edgeList = [];
+  var packet = null;
+  var packetAnim = 0;
+  var svg = null;
+  var heroH = 360;
+  var drag = null;
+  var panelTitleText = "";
+  var copyBox = null;
+  var aside, panelTitle, panelDetail, panelConf, panelEv, panelEntry;
+  var stepIndex = 0;
+  var playTimer = null;
+
+  function textAt(value, lv) {
+    if (value == null) return "";
+    if (typeof value === "string") return value;
+    if (typeof value !== "object") return String(value);
+    if (typeof value[String(lv)] === "string") return value[String(lv)];
+    if (meta.default_level != null && typeof value[String(meta.default_level)] === "string") return value[String(meta.default_level)];
+    var keys = Object.keys(value);
+    var i;
+    for (i = 0; i < keys.length; i++) {
+      if (typeof value[keys[i]] === "string") return value[keys[i]];
+    }
+    return "";
+  }
+
+  function isWordChar(ch) {
+    var c = ch.charCodeAt(0);
+    if (c >= 48 && c <= 57) return true;
+    if (c >= 65 && c <= 90) return true;
+    if (c >= 97 && c <= 122) return true;
+    if (c === 95) return true;
+    if (c >= 192) return true;
+    return false;
+  }
+
+  function wrapGlossary(element) {
+    var gloss = arr(explain.glossary).slice();
+    var textNode, text, lower, i, g, term, tl, beforeOk, afterIdx, afterOk, len, abbr, parts, start, h, term2, tl2, any;
+    if (!gloss.length || !element) return;
+    textNode = element.firstChild;
+    if (!textNode || textNode.nodeType !== 3 || element.childNodes.length !== 1) return;
+    text = textNode.nodeValue;
+    if (!text) return;
+    gloss.sort(function (a, b) { return String(b.term || "").length - String(a.term || "").length; });
+    lower = text.toLowerCase();
+    var used = {};
+    parts = [];
+    i = 0;
+    while (i < text.length) {
+      var found = null;
+      for (g = 0; g < gloss.length; g++) {
+        term = gloss[g] && gloss[g].term ? String(gloss[g].term) : "";
+        if (!term || used[term.toLowerCase()]) continue;
+        tl = term.toLowerCase();
+        if (lower.substr(i, tl.length) !== tl) continue;
+        beforeOk = i === 0 || !isWordChar(lower.charAt(i - 1));
+        afterIdx = i + tl.length;
+        afterOk = afterIdx >= text.length || !isWordChar(lower.charAt(afterIdx));
+        if (beforeOk && afterOk) { found = gloss[g]; break; }
+      }
+      if (found) {
+        len = String(found.term).length;
+        abbr = el("abbr", {"class": "term", title: found.definition || ""});
+        abbr.appendChild(document.createTextNode(text.substr(i, len)));
+        parts.push(abbr);
+        used[String(found.term).toLowerCase()] = true;
+        i += len;
+      } else {
+        start = i;
+        i += 1;
+        while (i < text.length) {
+          any = false;
+          for (h = 0; h < gloss.length; h++) {
+            term2 = gloss[h] && gloss[h].term ? String(gloss[h].term) : "";
+            if (!term2 || used[term2.toLowerCase()]) continue;
+            tl2 = term2.toLowerCase();
+            if (lower.substr(i, tl2.length) !== tl2) continue;
+            if (isWordChar(lower.charAt(i - 1))) continue;
+            if (i + tl2.length < text.length && isWordChar(lower.charAt(i + tl2.length))) continue;
+            any = true;
+            break;
+          }
+          if (any) break;
+          i += 1;
+        }
+        parts.push(document.createTextNode(text.slice(start, i)));
+      }
+    }
+    if (!Object.keys(used).length) return;
+    element.removeChild(textNode);
+    for (i = 0; i < parts.length; i++) element.appendChild(parts[i]);
+  }
+
+  function splitParas(text) {
+    var parts = String(text == null ? "" : text).split(/\n\s*\n/);
+    var out = [];
+    var i, p;
+    for (i = 0; i < parts.length; i++) {
+      p = parts[i].replace(/^\s+|\s+$/g, "");
+      if (p) out.push(p);
+    }
+    return out;
+  }
+
+  function applyOne(entry, lv) {
+    var text = textAt(entry.value, lv);
+    var parts, i, p;
+    if (entry.kind === "prose") {
+      entry.el.textContent = "";
+      parts = splitParas(text);
+      if (!parts.length) parts.push("");
+      for (i = 0; i < parts.length; i++) {
+        p = el("p");
+        p.appendChild(document.createTextNode(parts[i]));
+        wrapGlossary(p);
+        entry.el.appendChild(p);
+      }
+      return;
+    }
+    entry.el.textContent = text;
+    if (entry.glossary !== false) wrapGlossary(entry.el);
+    if (entry.aria) setAttr(entry.aria, "aria-label", text);
+  }
+
+  function bindText(node, value, opts) {
+    opts = opts || {};
+    var entry = {kind: "text", el: node, value: value, glossary: opts.glossary !== false, aria: opts.aria || null};
+    leveled.push(entry);
+    applyOne(entry, level);
+    return entry;
+  }
+
+  function bindProse(node, value) {
+    var entry = {kind: "prose", el: node, value: value};
+    leveled.push(entry);
+    applyOne(entry, level);
+    return entry;
+  }
+
+  function setLevel(n, persist) {
+    var i, b;
+    if (written.indexOf(n) < 0) return;
+    level = n;
+    if (persist) storageSet("paseo-explain.level", String(n));
+    for (i = 0; i < leveled.length; i++) applyOne(leveled[i], level);
+    for (i = 0; i < levelButtons.length; i++) {
+      b = levelButtons[i];
+      b.classList.toggle("on", b._lv === n);
+      setAttr(b, "aria-pressed", b._lv === n ? "true" : "false");
+    }
+  }
+
+  function staticWrap(parent, text) {
+    var span = el("span");
+    span.appendChild(document.createTextNode(text == null ? "" : String(text)));
+    wrapGlossary(span);
+    parent.appendChild(span);
+    return span;
+  }
+
+  function confLabel(confidence) {
+    var label;
+    if (!confidence || confidence === "confirmed") return null;
+    if (confidence === "inferred") label = t("inferred");
+    else if (confidence === "unknown") label = t("unknown");
+    else if (confidence === "assumption") label = t("assumption");
+    else if (confidence === "user_statement") label = t("userStatement");
+    else return null;
+    return el("span", {"class": "conf"}, label);
+  }
+
+  function shortAnchor(anchor, id) {
+    var s = anchor == null || anchor === "" ? String(id || "") : String(anchor);
+    return s.length > 16 ? s.slice(0, 16) : s;
+  }
+
+  function chips(ids, ctx) {
+    var wrap = el("span", {"class": "chips"});
+    var list = arr(ids);
+    var i, id, ev, anchor, short, btn;
+    if (!list.length) return null;
+    for (i = 0; i < list.length; i++) {
+      id = list[i];
+      ev = evidence[id] || {};
+      anchor = ev.anchor || id;
+      short = shortAnchor(anchor, id);
+      btn = el("button", {"class": "chip", title: String(anchor), "aria-label": t("evidence") + " " + short});
+      btn.appendChild(document.createTextNode(short));
+      btn.addEventListener("click", (function (snapshot) {
+        return function (evn) {
+          evn.stopPropagation();
+          openPanel(snapshot.title, snapshot.detail, snapshot.ids, snapshot.confidence);
+        };
+      })({title: ctx.title, detail: ctx.detail, ids: list.slice(), confidence: ctx.confidence}));
+      wrap.appendChild(btn);
+    }
+    return wrap;
+  }
+
+  function evidenceRow(ids, confidence, ctx) {
+    var row = el("div", {"class": "evrow"});
+    var c = confLabel(confidence);
+    var ch = chips(ids, ctx);
+    if (!c && !ch) return null;
+    if (c) row.appendChild(c);
+    if (ch) row.appendChild(ch);
+    return row;
+  }
+
+  function button(label, aria, className, fn) {
+    var b = el("button", {"class": className || "", "aria-label": aria || label});
+    b.appendChild(document.createTextNode(label));
+    b.addEventListener("click", fn);
+    return b;
+  }
+
+  function pad2(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  function followup(kind) {
+    var title = panelTitleText;
+    var slug = meta.slug || "";
+    if (nl) {
+      if (kind === "simpler") return "Leg \"" + title + "\" eenvoudiger uit (paseo-explain " + slug + ")";
+      if (kind === "why") return "Waarom is \"" + title + "\" zo? (paseo-explain " + slug + ")";
+      return "Wat als we \"" + title + "\" laten vallen? (paseo-explain " + slug + ")";
+    }
+    if (kind === "simpler") return "Explain \"" + title + "\" more simply (paseo-explain " + slug + ")";
+    if (kind === "why") return "Why is \"" + title + "\" this way? (paseo-explain " + slug + ")";
+    return "What if we drop \"" + title + "\"? (paseo-explain " + slug + ")";
+  }
+
+  function removeCopyBox() {
+    if (copyBox && copyBox.parentNode) copyBox.parentNode.removeChild(copyBox);
+    copyBox = null;
+  }
+
+  function showCopyBox(text) {
+    removeCopyBox();
+    copyBox = document.createElement("input");
+    copyBox.readOnly = true;
+    copyBox.value = text;
+    setAttr(copyBox, "class", "copybox");
+    setAttr(copyBox, "aria-label", t("followup"));
+    aside.appendChild(copyBox);
+    copyBox.focus();
+    copyBox.select();
+  }
+
+  function copyText(text) {
+    var clip = navigator.clipboard;
+    if (clip && typeof clip.writeText === "function") {
+      try {
+        var result = clip.writeText(text);
+        if (result && typeof result.then === "function") {
+          result.then(function () { removeCopyBox(); }, function () { showCopyBox(text); });
+          return;
+        }
+      } catch (e) {
+        showCopyBox(text);
+        return;
+      }
+    }
+    showCopyBox(text);
+  }
+
+  function fillEvidence(target, ids) {
+    var list = arr(ids);
+    var i, id, ev, box, head, range;
+    for (i = 0; i < list.length; i++) {
+      id = list[i];
+      ev = evidence[id];
+      if (!ev) {
+        box = el("div", {"class": "src"});
+        box.appendChild(document.createTextNode(String(id)));
+        target.appendChild(box);
+        continue;
+      }
+      box = el("div", {"class": ev.flagged ? "src flagged" : "src"});
+      head = el("b");
+      head.appendChild(document.createTextNode((ev.source_display || id) + " " + (ev.anchor || "")));
+      box.appendChild(head);
+      range = t("lines") + " " + (ev.line_start == null ? "" : ev.line_start) + "–" + (ev.line_end == null ? "" : ev.line_end);
+      box.appendChild(document.createTextNode("\n" + range + "\n" + (ev.text || "")));
+      if (ev.flagged) box.appendChild(document.createTextNode("\n" + t("flaggedMark")));
+      target.appendChild(box);
+    }
+  }
+
+function openPanel(title, detail, ids, confidence) {
+  var c;
+  clearNodeSel();
+  panelTitle.textContent = "";
+    staticWrap(panelTitle, title || "");
+    panelEntry.value = detail == null ? "" : detail;
+    applyOne(panelEntry, level);
+    panelConf.textContent = "";
+    c = confLabel(confidence);
+    if (c) panelConf.appendChild(c);
+    panelEv.textContent = "";
+    fillEvidence(panelEv, ids);
+    panelTitleText = title || "";
+    removeCopyBox();
+    aside.classList.add("open");
+  }
+
+  function factText() {
+    var label = meta.check_label || "not_checked";
+    var model = (meta.models && meta.models.fact_checker) || "";
+    var counts = meta.fact_counts || {};
+    var v = counts.verified || 0;
+    var c = counts.corrected || 0;
+    var n = (meta.checks && meta.checks.fact_check_corrections) || 0;
+    var s;
+    if (label === "independent" || label === "independent_corrected") {
+      s = fill(t("independent"), {model: model, v: v, c: c});
+      if (label === "independent_corrected") s += fill(t("correctedSuffix"), {n: n});
+      return s;
+    }
+    if (label === "same_family") return fill(t("sameFamily"), {model: model});
+    if (label === "independence_unknown") return fill(t("indepUnknown"), {model: model});
+    return t("notChecked");
+  }
+
+  function anyFlagged() {
+    var k;
+    for (k in evidence) {
+      if (Object.prototype.hasOwnProperty.call(evidence, k) && evidence[k] && evidence[k].flagged) return true;
+    }
+    return false;
+  }
+
+  function footerText() {
+    var ver = meta.version || "0.1.0";
+    var round = meta.round == null ? "" : String(meta.round);
+    var when = meta.generated_at || "";
+    if (nl) {
+      return "Gegenereerd door paseo-explain " + ver + " · ronde " + round + " · " + when + " · Door AI gegenereerde uitleg. Claims verwijzen naar hun bronnen; bijschriften, woordenlijst en quiz zijn toelichtende tekst.";
+    }
+    return "Generated by paseo-explain " + ver + " · round " + round + " · " + when + " · AI-generated explanation. Claims link to their sources; captions, glossary and quiz are explanatory text.";
+  }
+
+  function reducedMotion() {
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; }
+  }
+
+  function num(v, d) {
+    return typeof v === "number" && isFinite(v) ? v : d;
+  }
+
+  function snap(v) {
+    return Math.round(v / 12) * 12;
+  }
+
+  function clampNode(n) {
+    if (n.w > 1000) n.w = 1000;
+    if (n.x < 0) n.x = 0;
+    if (n.y < 0) n.y = 0;
+    if (n.x + n.w > 1000) n.x = Math.max(0, 1000 - n.w);
+    if (n.y + n.h > heroH) n.y = Math.max(0, heroH - n.h);
+  }
+
+  function placeNode(n) {
+    setAttr(n.rect, "x", n.x);
+    setAttr(n.rect, "y", n.y);
+    setAttr(n.rect, "width", n.w);
+    setAttr(n.rect, "height", n.h);
+    setAttr(n.labelEl, "x", n.x + 16);
+    setAttr(n.labelEl, "y", n.subEl ? n.y + 24 : n.y + n.h / 2);
+    if (n.subEl) {
+      setAttr(n.subEl, "x", n.x + 16);
+      setAttr(n.subEl, "y", n.y + 42);
+    }
+  }
+
+  function fitWidth(n) {
+    var need = n.minW;
+    try {
+      var lw = n.labelEl.getComputedTextLength() + 32;
+      if (lw > need) need = lw;
+      if (n.subEl) {
+        var sw = n.subEl.getComputedTextLength() + 32;
+        if (sw > need) need = sw;
+      }
+    } catch (e) {}
+    n.w = need;
+    clampNode(n);
+    placeNode(n);
+  }
+
+  function borderPoint(n, tx, ty) {
+    var cx = n.x + n.w / 2;
+    var cy = n.y + n.h / 2;
+    var dx = tx - cx;
+    var dy = ty - cy;
+    var sx, sy, s;
+    if (dx === 0 && dy === 0) return {x: cx, y: cy};
+    sx = dx !== 0 ? (n.w / 2) / Math.abs(dx) : Infinity;
+    sy = dy !== 0 ? (n.h / 2) / Math.abs(dy) : Infinity;
+    s = Math.min(sx, sy);
+    return {x: cx + dx * s, y: cy + dy * s};
+  }
+
+  function drawEdges() {
+    var i, e, a, b, p1, p2;
+    for (i = 0; i < edgeList.length; i++) {
+      e = edgeList[i];
+      a = nodeMap[e.from];
+      b = nodeMap[e.to];
+      if (!a || !b) continue;
+      p1 = borderPoint(a, b.x + b.w / 2, b.y + b.h / 2);
+      p2 = borderPoint(b, a.x + a.w / 2, a.y + a.h / 2);
+      setAttr(e.line, "x1", p1.x);
+      setAttr(e.line, "y1", p1.y);
+      setAttr(e.line, "x2", p2.x);
+      setAttr(e.line, "y2", p2.y);
+      if (e.labelEl) {
+        setAttr(e.labelEl, "x", (p1.x + p2.x) / 2);
+        setAttr(e.labelEl, "y", (p1.y + p2.y) / 2);
+      }
+    }
+  }
+
+  function layoutKey() {
+    return "paseo-explain.layout." + (meta.slug || "");
+  }
+
+  function saveLayout() {
+    var out = {};
+    var id;
+    for (id in nodeMap) {
+      if (Object.prototype.hasOwnProperty.call(nodeMap, id)) out[id] = {x: nodeMap[id].x, y: nodeMap[id].y};
+    }
+    storageSet(layoutKey(), JSON.stringify(out));
+  }
+
+  function applySavedLayout() {
+    var raw = storageGet(layoutKey());
+    var parsed, id, pos;
+    if (!raw) return;
+    try { parsed = JSON.parse(raw); } catch (e) { return; }
+    if (!parsed || typeof parsed !== "object") return;
+    for (id in nodeMap) {
+      if (!Object.prototype.hasOwnProperty.call(nodeMap, id)) continue;
+      pos = parsed[id];
+      if (!pos) continue;
+      if (typeof pos.x === "number") nodeMap[id].x = pos.x;
+      if (typeof pos.y === "number") nodeMap[id].y = pos.y;
+      clampNode(nodeMap[id]);
+      placeNode(nodeMap[id]);
+    }
+    drawEdges();
+  }
+
+  function resetLayout() {
+    var id;
+    for (id in nodeMap) {
+      if (!Object.prototype.hasOwnProperty.call(nodeMap, id)) continue;
+      nodeMap[id].x = nodeMap[id].ax;
+      nodeMap[id].y = nodeMap[id].ay;
+      clampNode(nodeMap[id]);
+      placeNode(nodeMap[id]);
+    }
+    drawEdges();
+    storageDel(layoutKey());
+  }
+
+  function clearNodeSel() {
+    var id;
+    for (id in nodeMap) {
+      if (Object.prototype.hasOwnProperty.call(nodeMap, id)) nodeMap[id].g.classList.remove("sel");
+    }
+  }
+
+function openNode(n) {
+  openPanel(n.label, n.detail, n.evidence, n.confidence);
+  clearNodeSel();
+  n.g.classList.add("sel");
+}
+
+  function svgPoint(ev) {
+    var pt, ctm, p;
+    if (!svg || !svg.createSVGPoint) return {x: 0, y: 0};
+    pt = svg.createSVGPoint();
+    pt.x = ev.clientX;
+    pt.y = ev.clientY;
+    ctm = svg.getScreenCTM();
+    if (!ctm) return {x: 0, y: 0};
+    p = pt.matrixTransform(ctm.inverse());
+    return {x: p.x, y: p.y};
+  }
+
+  function onPointerMove(ev) {
+    var p, dx, dy;
+    if (!drag || ev.pointerId !== drag.pid) return;
+    p = svgPoint(ev);
+    dx = p.x - drag.sx;
+    dy = p.y - drag.sy;
+    if (Math.sqrt(dx * dx + dy * dy) >= 4) drag.moved = true;
+    if (!drag.moved) return;
+    drag.n.x = snap(drag.ox + dx);
+    drag.n.y = snap(drag.oy + dy);
+    clampNode(drag.n);
+    placeNode(drag.n);
+    drawEdges();
+  }
+
+  function onPointerUp(ev) {
+    var n, moved;
+    if (!drag || ev.pointerId !== drag.pid) return;
+    n = drag.n;
+    moved = drag.moved;
+    n.g.classList.remove("drag");
+    drag = null;
+    if (!moved) openNode(n);
+    else saveLayout();
+  }
+
+  function hidePacket() {
+    packetAnim += 1;
+    if (packet) packet.classList.add("hide");
+  }
+
+  function setPacket(x, y) {
+    if (!packet) return;
+    setAttr(packet, "cx", x);
+    setAttr(packet, "cy", y);
+    packet.classList.remove("hide");
+  }
+
+  function animatePacket(fromId, toId) {
+    var a = nodeMap[fromId];
+    var b = nodeMap[toId];
+    var token = ++packetAnim;
+    var x1, y1, x2, y2, start;
+    if (!a || !b) { hidePacket(); return; }
+    x1 = a.x + a.w / 2;
+    y1 = a.y + a.h / 2;
+    x2 = b.x + b.w / 2;
+    y2 = b.y + b.h / 2;
+    if (reducedMotion()) { setPacket(x2, y2); return; }
+    start = null;
+    function frame(now) {
+      var u;
+      if (token !== packetAnim) return;
+      if (start == null) start = now;
+      u = (now - start) / 900;
+      if (u > 1) u = 1;
+      setPacket(x1 + (x2 - x1) * u, y1 + (y2 - y1) * u);
+      if (u < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function renderSection(sec, index) {
+    var sid = sec.id ? String(sec.id) : ("section-" + (index + 1));
+    var section = el("section", {id: sid});
+    var h2 = el("h2");
+    var sub, row, ctx;
+    h2.appendChild(el("span", {"class": "num"}, pad2(index + 1)));
+    staticWrap(h2, sec.title || "");
+    section.appendChild(h2);
+    if (sec.subtitle != null) {
+      sub = el("p", {"class": "sub2"});
+      bindText(sub, sec.subtitle);
+      section.appendChild(sub);
+    }
+    ctx = {title: sec.title || "", detail: sectionDetail(sec), confidence: sec.confidence};
+    row = evidenceRow(sec.evidence, sec.confidence, ctx);
+    if (row) section.appendChild(row);
+    if (sec.type === "prose") section.appendChild(renderProse(sec));
+    else if (sec.type === "change") section.appendChild(renderChange(sec));
+    else if (sec.type === "diagram") section.appendChild(renderDiagram(sec));
+    else if (sec.type === "coverage") section.appendChild(renderCoverage(sec));
+    else if (sec.type === "decisions") section.appendChild(renderDecisions(sec));
+    else if (sec.type === "risks") section.appendChild(renderRisks(sec));
+    else if (sec.type === "quiz") section.appendChild(renderQuiz(sec));
+    return section;
+  }
+
+  function sectionDetail(sec) {
+    if (sec.type === "prose") return sec.body;
+    if (sec.type === "diagram") return sec.caption;
+    if (sec.subtitle != null) return sec.subtitle;
+    return sec.title || "";
+  }
+
+  function renderProse(sec) {
+    var box = el("div", {"class": "prose"});
+    bindProse(box, sec.body);
+    return box;
+  }
+
+  function renderChange(sec) {
+    var cols = el("div", {"class": "cols"});
+    var keys = ["now", "next", "unchanged"];
+    var i, key, col, ul, items, j, item, li, span, quote;
+    for (i = 0; i < keys.length; i++) {
+      key = keys[i];
+      col = el("div", {"class": key === "next" ? "col next" : "col"});
+      col.appendChild(el("h3", {}, t(key)));
+      ul = el("ul");
+      items = arr(sec[key]);
+      for (j = 0; j < items.length; j++) {
+        item = items[j] || {};
+        li = el("li");
+        span = el("span");
+        bindText(span, item.text);
+        li.appendChild(span);
+        if (item.quote && item.quote.text) {
+          quote = el("div", {"class": "src"});
+          quote.appendChild(document.createTextNode(item.quote.text));
+          li.appendChild(quote);
+        }
+        rowAppend(li, evidenceRow(item.evidence, item.confidence, {
+          title: sec.title || t(key),
+          detail: item.text,
+          confidence: item.confidence
+        }));
+        ul.appendChild(li);
+      }
+      col.appendChild(ul);
+      cols.appendChild(col);
+    }
+    return cols;
+  }
+
+  function rowAppend(parent, child) {
+    if (child) parent.appendChild(child);
+  }
+
+  function renderDiagram(sec) {
+    var wrap = el("div");
+    var mm = el("div", {"class": "mm"});
+    var pre = el("pre", {"class": "mermaid"});
+    var note = el("p", {"class": "mmnote"});
+    var cap = el("p", {"class": "figcap"});
+    var det = el("details");
+    var sum = el("summary");
+    var alt = el("p");
+    pre.appendChild(document.createTextNode(sec.mermaid || ""));
+    mm.appendChild(pre);
+    bindText(cap, sec.caption);
+    sum.appendChild(document.createTextNode(t("textVersion")));
+    det.appendChild(sum);
+    staticWrap(alt, sec.alt || "");
+    det.appendChild(alt);
+    wrap.appendChild(mm);
+    wrap.appendChild(cap);
+    wrap.appendChild(det);
+    wrap.appendChild(note);
+    diagrams.push({pre: pre, source: sec.mermaid || "", note: note});
+    return wrap;
+  }
+
+  function renderCoverage(sec) {
+    var box = el("div", {"class": "cov"});
+    var table = el("table");
+    var thead = el("thead");
+    var hr = el("tr");
+    var tbody = el("tbody");
+    var tasks = arr(sec.tasks);
+    var reqs = arr(sec.requirements);
+    var taskHeads = [];
+    var i, task, th, chip, req, tr, td0, linked, k, td, tdT;
+    hr.appendChild(el("th", {}, t("requirement")));
+    for (i = 0; i < tasks.length; i++) {
+      task = tasks[i] || {};
+      th = el("th");
+      chip = el("span", {"class": "chip", title: task.label || task.id || "", "data-task": task.id || ""});
+      chip.appendChild(document.createTextNode(task.id || ""));
+      th.appendChild(chip);
+      taskHeads.push({id: task.id, el: chip});
+      hr.appendChild(th);
+    }
+    hr.appendChild(el("th", {}, t("test")));
+    thead.appendChild(hr);
+    table.appendChild(thead);
+    for (i = 0; i < reqs.length; i++) {
+      req = reqs[i] || {};
+      tr = el("tr", {"class": "r", tabindex: "0"});
+      td0 = el("td");
+      staticWrap(td0, (req.id ? req.id + " " : "") + (req.text || ""));
+      if (!arr(req.tasks).length) td0.appendChild(el("div", {"class": "gap"}, t("noTask")));
+      rowAppend(td0, evidenceRow(req.evidence, req.confidence, {
+        title: req.id || req.text || "",
+        detail: req.text || "",
+        confidence: req.confidence
+      }));
+      tr.appendChild(td0);
+      linked = {};
+      for (k = 0; k < arr(req.tasks).length; k++) linked[req.tasks[k]] = true;
+      for (k = 0; k < tasks.length; k++) {
+        td = el("td", {"class": linked[tasks[k].id] ? "x" : ""});
+        if (linked[tasks[k].id]) td.appendChild(document.createTextNode("●"));
+        tr.appendChild(td);
+      }
+      if (req.test === "yes") tdT = el("td", {"class": "okc"}, "✓");
+      else if (req.test === "no") tdT = el("td", {"class": "gap"}, t("noTest"));
+      else tdT = el("td", {}, "?");
+      tr.appendChild(tdT);
+      tr.addEventListener("click", (function (row, ids) {
+        return function () { selectCoverage(tbody, taskHeads, row, ids); };
+      })(tr, arr(req.tasks).slice()));
+      tr.addEventListener("keydown", (function (row, ids) {
+        return function (ev) {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            selectCoverage(tbody, taskHeads, row, ids);
+          }
+        };
+      })(tr, arr(req.tasks).slice()));
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    box.appendChild(table);
+    return box;
+  }
+
+  function selectCoverage(tbody, taskHeads, row, ids) {
+    var rows = tbody.children;
+    var i, on;
+    for (i = 0; i < rows.length; i++) rows[i].classList.remove("sel");
+    row.classList.add("sel");
+    for (i = 0; i < taskHeads.length; i++) {
+      on = ids.indexOf(taskHeads[i].id) >= 0;
+      taskHeads[i].el.classList.toggle("sel", on);
+    }
+  }
+
+  function renderDecisions(sec) {
+    var grid = el("div", {"class": "dec"});
+    var items = arr(sec.items);
+    var i, item, card, why;
+    for (i = 0; i < items.length; i++) {
+      item = items[i] || {};
+      card = el("article", {"class": "card " + (item.status === "chosen" ? "chosen" : "rejected")});
+      card.appendChild(el("div", {"class": "k"}, item.status === "chosen" ? t("chosen") : t("rejected")));
+      var h4 = el("h4");
+      staticWrap(h4, item.title || "");
+      card.appendChild(h4);
+      why = el("p");
+      bindText(why, item.why);
+      card.appendChild(why);
+      rowAppend(card, evidenceRow(item.evidence, item.confidence, {
+        title: item.title || "",
+        detail: item.why,
+        confidence: item.confidence
+      }));
+      grid.appendChild(card);
+    }
+    return grid;
+  }
+
+  function renderRisks(sec) {
+    var grid = el("div", {"class": "risks"});
+    var items = arr(sec.items);
+    var i, item, kind, card, body;
+    for (i = 0; i < items.length; i++) {
+      item = items[i] || {};
+      kind = item.kind || "risk";
+      card = el("article", {"class": "card " + kind});
+      card.appendChild(el("div", {"class": "k"}, kindLabel(kind)));
+      var h4 = el("h4");
+      staticWrap(h4, item.title || "");
+      card.appendChild(h4);
+      body = el("p");
+      bindText(body, item.text);
+      card.appendChild(body);
+      rowAppend(card, evidenceRow(item.evidence, item.confidence, {
+        title: item.title || "",
+        detail: item.text,
+        confidence: item.confidence
+      }));
+      grid.appendChild(card);
+    }
+    return grid;
+  }
+
+  function kindLabel(kind) {
+    if (kind === "open_question") return t("openQuestion");
+    if (kind === "assumption") return t("assumption");
+    return t("risk");
+  }
+
+  function renderQuiz(sec) {
+    var box = el("div");
+    var items = arr(sec.items);
+    var i, item, det, sum, ans;
+    for (i = 0; i < items.length; i++) {
+      item = items[i] || {};
+      det = el("details");
+      sum = el("summary");
+      bindText(sum, item.q);
+      ans = el("p");
+      bindText(ans, item.a);
+      det.appendChild(sum);
+      det.appendChild(ans);
+      box.appendChild(det);
+    }
+    return box;
+  }
+
+  function renderMermaid() {
+    var gen, vars, i, d, parse;
+    if (!globalThis.mermaid) return;
+    gen = ++mermaidGen;
+    vars = theme === "light" ? THEME_VARS.light : THEME_VARS.dark;
+    globalThis.mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      themeVariables: vars,
+      themeCSS: theme === "light" ? THEME_CSS.light : THEME_CSS.dark
+    });
+    for (i = 0; i < diagrams.length; i++) {
+      d = diagrams[i];
+      d.pre.textContent = d.source;
+      d.pre.classList.add("mermaid");
+      d.note.textContent = "";
+      parse = globalThis.mermaid.parse;
+      (function (diagram) {
+        Promise.resolve().then(function () {
+          if (gen !== mermaidGen) return null;
+          if (typeof parse === "function") return parse.call(globalThis.mermaid, diagram.source);
+          return null;
+        }).then(function () {
+          if (gen !== mermaidGen) return null;
+          return globalThis.mermaid.run({nodes: [diagram.pre]});
+        }).catch(function () {
+          if (gen !== mermaidGen) return;
+          diagram.pre.textContent = diagram.source;
+          diagram.note.textContent = t("diagramDraw");
+        });
+      })(d);
+    }
+  }
+
+  function offlineAll() {
+    var i;
+    for (i = 0; i < diagrams.length; i++) {
+      diagrams[i].pre.textContent = diagrams[i].source;
+      diagrams[i].note.textContent = t("diagramOffline");
+    }
+  }
+
+  function armMermaid() {
+    function check() {
+      if (globalThis.mermaid) renderMermaid();
+      else setTimeout(function () {
+        if (globalThis.mermaid) renderMermaid();
+        else offlineAll();
+      }, 5000);
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", check);
+    else check();
+  }
+
+  var levelButtons = [];
+
+  function buildHero(hero) {
+    var box = el("div", {"class": "hero"});
+    var head = el("div", {"class": "hh"});
+    var player = el("div", {"class": "player"});
+    var steps = arr(hero.steps);
+    var cap = el("p", {"class": "cap"});
+    var zones = arr(hero.zones);
+    var nodes = arr(hero.nodes);
+    var edges = arr(hero.edges);
+    var defs, marker, zoneG, edgeG, nodeG, i, z, n, e, g, rect, labelEl, subEl, line, labelNode;
+    heroH = num(hero.height, 360);
+    svg = el("svg", {role: "img", viewBox: "0 0 1000 " + heroH, "aria-label": ""});
+    defs = el("defs");
+    marker = el("marker", {id: "arrow", markerWidth: "8", markerHeight: "8", refX: "8", refY: "4", orient: "auto"});
+    marker.appendChild(el("path", {d: "M0,0 L8,4 L0,8 Z"}));
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+    zoneG = el("g");
+    edgeG = el("g");
+    nodeG = el("g");
+    for (i = 0; i < zones.length; i++) {
+      z = zones[i] || {};
+      zoneG.appendChild(el("rect", {
+        "class": z.tone === "new" ? "zone new" : "zone",
+        x: num(z.x, 0), y: num(z.y, 0), width: num(z.w, 0), height: num(z.h, 0)
+      }));
+      zoneG.appendChild(el("text", {
+        "class": z.tone === "new" ? "zl new" : "zl",
+        x: num(z.x, 0) + 8,
+        y: num(z.y, 0) + 14
+      }, z.label || ""));
+    }
+    for (i = 0; i < nodes.length; i++) {
+      n = nodes[i] || {};
+      if (!n.id) continue;
+      g = el("g", {
+        "class": n.tone === "new" ? "n new" : (n.tone === "external" ? "n external" : "n"),
+        role: "button",
+        tabindex: "0",
+        "data-node": n.id,
+        "aria-label": n.sub ? (n.label + ", " + n.sub) : (n.label || n.id)
+      });
+      rect = el("rect", {x: num(n.x, 0), y: num(n.y, 0), width: num(n.w, 180), height: n.sub ? 56 : 40, rx: 12, ry: 12});
+      labelEl = el("text", {}, n.label || "");
+      g.appendChild(rect);
+      g.appendChild(labelEl);
+      subEl = null;
+      if (n.sub) {
+        subEl = el("text", {"class": "sub"}, n.sub);
+        g.appendChild(subEl);
+      }
+      nodeMap[n.id] = {
+        id: n.id, g: g, rect: rect, labelEl: labelEl, subEl: subEl,
+        x: num(n.x, 0), y: num(n.y, 0), w: num(n.w, 180), h: n.sub ? 56 : 40,
+        minW: num(n.w, 180), ax: num(n.x, 0), ay: num(n.y, 0),
+        label: n.label || n.id, detail: n.detail, evidence: n.evidence, confidence: n.confidence
+      };
+      g.addEventListener("pointerdown", (function (node) {
+        return function (ev) {
+          var p;
+          if (ev.button !== 0 && ev.pointerType === "mouse") return;
+          p = svgPoint(ev);
+          drag = {n: node, sx: p.x, sy: p.y, ox: node.x, oy: node.y, moved: false, pid: ev.pointerId};
+          node.g.classList.add("drag");
+          try { node.g.setPointerCapture(ev.pointerId); } catch (err) {}
+        };
+      })(nodeMap[n.id]));
+      g.addEventListener("keydown", (function (node) {
+        return function (ev) {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            openNode(node);
+          }
+        };
+      })(nodeMap[n.id]));
+      nodeG.appendChild(g);
+    }
+    for (i = 0; i < edges.length; i++) {
+      e = edges[i] || {};
+      line = el("line", {"class": e.tone === "new" ? "e new" : "e", x1: 0, y1: 0, x2: 0, y2: 0});
+      if (e.tone !== "new") setAttr(line, "marker-end", "url(#arrow)");
+      labelNode = null;
+      if (e.label) {
+        labelNode = el("text", {"class": "el", "text-anchor": "middle", "dominant-baseline": "middle"}, e.label);
+      }
+      edgeG.appendChild(line);
+      if (labelNode) edgeG.appendChild(labelNode);
+      edgeList.push({from: e.from, to: e.to, line: line, labelEl: labelNode});
+    }
+    packet = el("circle", {"class": "pkt hide", r: 6, cx: 0, cy: 0, "aria-hidden": "true"});
+    svg.appendChild(zoneG);
+    svg.appendChild(edgeG);
+    svg.appendChild(nodeG);
+    svg.appendChild(packet);
+    head.appendChild(el("span", {"class": "t"}, t("overview")));
+    if (steps.length) {
+      player.appendChild(button("‹", t("prev"), "", function () {
+        stopPlay();
+        if (stepIndex > 0) goStep(stepIndex - 1);
+      }));
+      var playBtn = button(t("play"), t("play"), "", function () { togglePlay(playBtn, steps); });
+      player.appendChild(playBtn);
+      player.appendChild(button("›", t("next"), "", function () {
+        stopPlay();
+        if (stepIndex < steps.length - 1) goStep(stepIndex + 1);
+      }));
+      var counter = el("span", {"aria-label": t("step")});
+      player.appendChild(counter);
+      head.appendChild(player);
+    }
+    head.appendChild(button(t("reset"), t("reset"), "tbtn", resetLayout));
+    box.appendChild(head);
+    box.appendChild(svg);
+    bindText(cap, hero.caption, {aria: svg});
+    box.appendChild(cap);
+    var stepBox = null, stepI = null, stepText = null, stepChips = null, bar = null, stepEntry = null;
+    if (steps.length) {
+      stepBox = el("div", {"class": "stepbox", "aria-live": "polite"});
+      stepI = el("span", {"class": "i"});
+      stepText = el("span");
+      stepChips = el("span");
+      stepBox.appendChild(stepI);
+      stepBox.appendChild(stepText);
+      stepBox.appendChild(stepChips);
+      stepEntry = bindText(stepText, steps[0].text);
+      bar = el("i");
+      var progress = el("div", {"class": "progress"});
+      progress.appendChild(bar);
+      box.appendChild(stepBox);
+      box.appendChild(progress);
+    }
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    function goStep(i) {
+      var step, id, k, lit;
+      if (!steps.length || i < 0 || i >= steps.length) return;
+      stepIndex = i;
+      step = steps[i] || {};
+      counter.textContent = (i + 1) + " / " + steps.length;
+      stepI.textContent = String(i + 1);
+      stepEntry.value = step.text;
+      applyOne(stepEntry, level);
+      bar.style.width = ((i + 1) / steps.length * 100) + "%";
+      svg.classList.add("dimmed");
+      for (id in nodeMap) {
+        if (Object.prototype.hasOwnProperty.call(nodeMap, id)) nodeMap[id].g.classList.remove("lit");
+      }
+      lit = arr(step.nodes);
+      for (k = 0; k < lit.length; k++) {
+        if (nodeMap[lit[k]]) nodeMap[lit[k]].g.classList.add("lit");
+      }
+      stepChips.textContent = "";
+      rowAppend(stepChips, chips(step.evidence, {title: t("step") + " " + (i + 1), detail: step.text, confidence: null}));
+      if (step.from && step.to) animatePacket(step.from, step.to);
+      else hidePacket();
+    }
+    function stopPlay() {
+      if (playTimer) {
+        clearInterval(playTimer);
+        playTimer = null;
+      }
+      if (steps.length) {
+        var btn = player.querySelector("button.on") || player.children[1];
+        if (btn) {
+          btn.classList.remove("on");
+          btn.textContent = t("play");
+          setAttr(btn, "aria-label", t("play"));
+        }
+      }
+    }
+    function togglePlay(playBtn, stepList) {
+      if (playTimer) { stopPlay(); return; }
+      if (stepIndex >= stepList.length - 1) goStep(0);
+      playBtn.classList.add("on");
+      playBtn.textContent = t("pause");
+      setAttr(playBtn, "aria-label", t("pause"));
+      playTimer = setInterval(function () {
+        if (stepIndex >= stepList.length - 1) { stopPlay(); return; }
+        goStep(stepIndex + 1);
+        if (stepIndex >= stepList.length - 1) stopPlay();
+      }, 2200);
+    }
+    box._goStep = goStep;
+    box._steps = steps;
+    return box;
+  }
+
+  function build() {
+    var anchor = document.getElementById("pe-data");
+    var top = el("header", {"class": "top"});
+    var nav = el("nav", {"aria-label": t("explanation")});
+    var main = el("main");
+    var kicker = el("div", {"class": "kicker"});
+    var h1 = el("h1");
+    var lead = el("p", {"class": "lead"});
+    var facts = el("ul", {"class": "facts"});
+    var banner = el("div", {"class": "banner", role: "status"});
+    var factList = arr(explain.facts);
+    var sections = arr(explain.sections);
+    var gloss = arr(explain.glossary);
+    var i, fact, li, b, hero, heroBox, secEl, dl, dt, dd, skipped, grade;
+    document.body.classList.toggle("light", theme === "light");
+    top.appendChild(el("b", {}, "paseo-explain"));
+    top.appendChild(el("span", {"class": "badge"}, explain.kind === "idea" ? t("idea") : t("planSpec")));
+    var levelsWrap = el("span", {"class": "levels"});
+    for (i = 1; i <= 5; i++) {
+      (function (n) {
+        var name = L.levels[n];
+        var writtenStop = written.indexOf(n) >= 0;
+        var btn = el("button", {"class": "tbtn", "aria-label": name, "aria-pressed": n === level ? "true" : "false"});
+        btn._lv = n;
+        btn.appendChild(document.createTextNode(name));
+        if (!writtenStop) {
+          btn.disabled = true;
+          setAttr(btn, "title", t("notGenerated"));
+        }
+        if (n === level) btn.classList.add("on");
+        btn.addEventListener("click", function () { if (!btn.disabled) setLevel(n, true); });
+        levelButtons.push(btn);
+        levelsWrap.appendChild(btn);
+      })(i);
+    }
+    top.appendChild(levelsWrap);
+    top.appendChild(el("span", {"class": "sp"}));
+    top.appendChild(nav);
+    top.appendChild(button("◐", t("theme"), "tbtn", function () {
+      theme = theme === "light" ? "dark" : "light";
+      document.body.classList.toggle("light", theme === "light");
+      storageSet("paseo-explain.theme", theme);
+      if (globalThis.mermaid) renderMermaid();
+    }));
+    kicker.appendChild(document.createTextNode(t("explanation") + " · " + (explain.kind === "idea" ? t("idea") : t("planSpec"))));
+    h1.appendChild(document.createTextNode(explain.title || ""));
+    wrapGlossary(h1);
+    bindText(lead, explain.lead && explain.lead.text);
+    main.appendChild(kicker);
+    main.appendChild(h1);
+    main.appendChild(lead);
+    rowAppend(main, evidenceRow(explain.lead && explain.lead.evidence, explain.lead && explain.lead.confidence, {
+      title: explain.title || "",
+      detail: explain.lead && explain.lead.text,
+      confidence: explain.lead && explain.lead.confidence
+    }));
+    for (i = 0; i < factList.length; i++) {
+      fact = factList[i] || {};
+      li = el("li");
+      staticWrap(li, fact.label || "");
+      b = el("b");
+      staticWrap(b, fact.value || "");
+      li.appendChild(b);
+      rowAppend(li, evidenceRow(fact.evidence, fact.confidence, {
+        title: fact.label || "",
+        detail: fact.value || "",
+        confidence: fact.confidence
+      }));
+      facts.appendChild(li);
+    }
+    main.appendChild(facts);
+    banner.appendChild(el("p", {}, factText()));
+    skipped = meta.skipped || {};
+    if (skipped.fact_check) banner.appendChild(el("p", {}, fill(t("skip"), {reason: skipped.fact_check})));
+    if (meta.mode === "deep" && meta.reader_grade && meta.reader_grade.total != null) {
+      grade = meta.reader_grade;
+      banner.appendChild(el("p", {}, fill(t("reader"), {correct: grade.correct, total: grade.total})));
+    }
+    if (anyFlagged()) banner.appendChild(el("p", {"class": "flag"}, t("flagged")));
+    main.appendChild(banner);
+    hero = explain.hero || {};
+    heroBox = buildHero(hero);
+    main.appendChild(heroBox);
+    for (i = 0; i < sections.length; i++) {
+      secEl = renderSection(sections[i] || {}, i);
+      main.appendChild(secEl);
+      nav.appendChild(el("a", {href: "#" + (secEl.id || "")}, (sections[i] && sections[i].title) || ""));
+    }
+    if (gloss.length) {
+      var gsec = el("section", {id: "glossary"});
+      gsec.appendChild(el("h2", {}, t("glossary")));
+      dl = el("dl");
+      for (i = 0; i < gloss.length; i++) {
+        dt = el("dt");
+        dt.appendChild(document.createTextNode(gloss[i].term || ""));
+        dd = el("dd");
+        staticWrap(dd, gloss[i].definition || "");
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      }
+      gsec.appendChild(dl);
+      main.appendChild(gsec);
+      nav.appendChild(el("a", {href: "#glossary"}, t("glossary")));
+    }
+    main.appendChild(el("p", {"class": "note"}, footerText()));
+    aside = el("aside", {"aria-label": t("evidence")});
+    aside.appendChild(button("×", t("close"), "x", function () { aside.classList.remove("open"); }));
+    panelTitle = el("h3");
+    panelDetail = el("p");
+    panelConf = el("div");
+    panelEv = el("div");
+    panelEntry = bindText(panelDetail, "");
+    aside.appendChild(panelTitle);
+    aside.appendChild(panelDetail);
+    aside.appendChild(panelConf);
+    aside.appendChild(panelEv);
+    var actions = el("div", {"class": "actions"});
+    actions.appendChild(button(t("simpler"), t("simpler"), "", function () { copyText(followup("simpler")); }));
+    actions.appendChild(button(t("why"), t("why"), "", function () { copyText(followup("why")); }));
+    actions.appendChild(button(t("drop"), t("drop"), "", function () { copyText(followup("drop")); }));
+    aside.appendChild(actions);
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") aside.classList.remove("open");
+    });
+    window.addEventListener("beforeprint", function () {
+      var ds = document.querySelectorAll("details");
+      var n;
+      for (n = 0; n < ds.length; n++) ds[n].open = true;
+    });
+    document.body.insertBefore(top, anchor);
+    document.body.insertBefore(main, anchor);
+    document.body.insertBefore(aside, anchor);
+    var ids = Object.keys(nodeMap);
+    for (i = 0; i < ids.length; i++) fitWidth(nodeMap[ids[i]]);
+    drawEdges();
+    applySavedLayout();
+    if (heroBox._steps && heroBox._steps.length) heroBox._goStep(0);
+  }
+
+  build();
+  armMermaid();
+})();
+</script>
+</body>
+</html>
