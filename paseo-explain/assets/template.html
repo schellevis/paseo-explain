@@ -55,7 +55,7 @@ section{margin-top:48px}h2{font:600 22px/1.2 var(--sans);letter-spacing:-.01em;m
 .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.col,.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .col h3{margin:0 0 8px;font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}.col.next{border-color:rgba(70,249,184,.45)}.col.next h3{color:var(--mint)}
 .col ul{margin:0;padding-left:18px;color:#c3cddd}.col li{margin:4px 0}.col li::marker{color:var(--dim)}
-.mm{display:flex;justify-content:center}.mm svg{width:100%!important;max-width:880px!important;height:auto!important}.mm pre{width:100%;margin:0;display:flex;justify-content:center}
+.mm{position:relative;display:flex;justify-content:center}.mm svg{width:100%!important;max-width:880px!important;height:auto!important}.mm pre{width:100%;margin:0;display:flex;justify-content:center}.mm pre.staging{position:absolute;left:0;top:0;width:100%;height:1px;overflow:hidden;opacity:0;pointer-events:none}
 table{border-collapse:separate;border-spacing:0;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;font-size:14px}
 th{font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--bg-2)}
 th,td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:center}th:first-child,td:first-child,td:nth-child(2){text-align:left}tr:last-child td{border-bottom:0}
@@ -1046,7 +1046,14 @@ function openNode(n) {
     wrap.appendChild(cap);
     wrap.appendChild(det);
     wrap.appendChild(note);
-    diagrams.push({pre: pre, source: sec.mermaid || "", note: note});
+    diagrams.push({
+      pre: pre,
+      host: mm,
+      source: sec.mermaid || "",
+      alt: typeof sec.alt === "string" ? sec.alt : "",
+      details: det,
+      note: note
+    });
     return wrap;
   }
 
@@ -1198,8 +1205,24 @@ function openNode(n) {
     return box;
   }
 
+  function dropNode(node) {
+    if (node && node.parentNode) node.parentNode.removeChild(node);
+  }
+
+  function showDiagramFallback(diagram, message) {
+    var pre = el("pre");
+    var note = message;
+    pre.appendChild(document.createTextNode(diagram.source));
+    if (diagram.pre && diagram.pre.parentNode) diagram.pre.parentNode.replaceChild(pre, diagram.pre);
+    else if (diagram.host) diagram.host.appendChild(pre);
+    diagram.pre = pre;
+    if (diagram.alt) note = message + " " + diagram.alt;
+    diagram.note.textContent = note;
+    if (diagram.details) diagram.details.open = true;
+  }
+
   function renderMermaid() {
-    var gen, vars, i, d, parse;
+    var gen, vars, i;
     if (!globalThis.mermaid) return;
     gen = ++mermaidGen;
     vars = theme === "light" ? THEME_VARS.light : THEME_VARS.dark;
@@ -1211,34 +1234,43 @@ function openNode(n) {
       themeCSS: theme === "light" ? THEME_CSS.light : THEME_CSS.dark
     });
     for (i = 0; i < diagrams.length; i++) {
-      d = diagrams[i];
-      d.pre.textContent = d.source;
-      d.pre.classList.add("mermaid");
-      d.note.textContent = "";
-      parse = globalThis.mermaid.parse;
       (function (diagram) {
+        var fresh = el("pre", {"class": "mermaid staging"});
+        fresh.appendChild(document.createTextNode(diagram.source));
+        fresh.removeAttribute("data-processed");
+        diagram.host.appendChild(fresh);
         Promise.resolve().then(function () {
           if (gen !== mermaidGen) return null;
-          if (typeof parse === "function") return parse.call(globalThis.mermaid, diagram.source);
-          return null;
+          return globalThis.mermaid.run({nodes: [fresh]});
         }).then(function () {
-          if (gen !== mermaidGen) return null;
-          return globalThis.mermaid.run({nodes: [diagram.pre]});
+          if (gen !== mermaidGen) {
+            dropNode(fresh);
+            return;
+          }
+          if (!fresh.querySelector("svg")) {
+            dropNode(fresh);
+            showDiagramFallback(diagram, t("diagramDraw"));
+            return;
+          }
+          fresh.classList.remove("staging");
+          if (diagram.pre !== fresh) dropNode(diagram.pre);
+          diagram.pre = fresh;
+          diagram.note.textContent = "";
         }).catch(function () {
-          if (gen !== mermaidGen) return;
-          diagram.pre.textContent = diagram.source;
-          diagram.note.textContent = t("diagramDraw");
+          if (gen !== mermaidGen) {
+            dropNode(fresh);
+            return;
+          }
+          dropNode(fresh);
+          showDiagramFallback(diagram, t("diagramDraw"));
         });
-      })(d);
+      })(diagrams[i]);
     }
   }
 
   function offlineAll() {
     var i;
-    for (i = 0; i < diagrams.length; i++) {
-      diagrams[i].pre.textContent = diagrams[i].source;
-      diagrams[i].note.textContent = t("diagramOffline");
-    }
+    for (i = 0; i < diagrams.length; i++) showDiagramFallback(diagrams[i], t("diagramOffline"));
   }
 
   function armMermaid() {
@@ -1460,7 +1492,12 @@ function openNode(n) {
     var gloss = arr(explain.glossary);
     var i, fact, li, b, hero, heroBox, secEl, dl, dt, dd, skipped, grade;
     document.body.classList.toggle("light", theme === "light");
-    function themeLabel() { return theme === "light" ? t("light") : t("dark"); }
+    function themeTarget() { return theme === "light" ? t("dark") : t("light"); }
+    function syncThemeButton(btn) {
+      btn.textContent = themeTarget();
+      setAttr(btn, "aria-label", t("theme") + ": " + themeTarget());
+      setAttr(btn, "aria-pressed", theme === "light" ? "true" : "false");
+    }
     row.appendChild(el("b", {}, "paseo-explain"));
     row.appendChild(el("span", {"class": "badge"}, explain.kind === "idea" ? t("idea") : t("planSpec")));
     var levelsWrap = el("span", {"class": "levels"});
@@ -1483,14 +1520,14 @@ function openNode(n) {
     }
     row.appendChild(levelsWrap);
     row.appendChild(el("span", {"class": "sp"}));
-    var themeBtn = button(themeLabel(), t("theme") + ": " + themeLabel(), "tbtn", function () {
+    var themeBtn = button(themeTarget(), t("theme") + ": " + themeTarget(), "tbtn", function () {
       theme = theme === "light" ? "dark" : "light";
       document.body.classList.toggle("light", theme === "light");
       storageSet("paseo-explain.theme", theme);
-      themeBtn.textContent = themeLabel();
-      setAttr(themeBtn, "aria-label", t("theme") + ": " + themeLabel());
+      syncThemeButton(themeBtn);
       if (globalThis.mermaid) renderMermaid();
     });
+    syncThemeButton(themeBtn);
     row.appendChild(themeBtn);
     top.appendChild(row);
     top.appendChild(nav);
