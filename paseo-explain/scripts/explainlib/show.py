@@ -42,11 +42,15 @@ def run_paseo(args):
             return json.loads(proc.stdout)
         except json.JSONDecodeError as exc:
             raise ExplainError(3, "paseo returned invalid JSON") from exc
-    try:
-        return json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        detail = proc.stderr.strip() or f"paseo exited {proc.returncode}"
-        raise ExplainError(3, detail)
+    for output in (proc.stdout, proc.stderr):
+        if not output:
+            continue
+        try:
+            return json.loads(output)
+        except json.JSONDecodeError:
+            pass
+    detail = proc.stderr.strip() or f"paseo exited {proc.returncode}"
+    raise ExplainError(3, detail)
 
 
 def _server_path(directory=None) -> str:

@@ -35,7 +35,8 @@ args = sys.argv[1:]
 
 
 def emit(obj, code=0):
-    sys.stdout.write(json.dumps(obj))
+    stream = sys.stderr if code and not state.get("stdout_error") else sys.stdout
+    stream.write(json.dumps(obj))
     raise SystemExit(code)
 
 
@@ -500,7 +501,7 @@ class ShowTests(unittest.TestCase):
             self.assertEqual(caught.exception.code, 3)
             self.assertEqual(caught.exception.extra["fallback"], payload["fallback"])
 
-    def test_stop_registered_and_unregistered(self):
+    def test_stop_registered(self):
         with world() as item:
             item.write_state(registered=True, running=True, port=9)
             proc = item.cli("stop")
@@ -508,11 +509,26 @@ class ShowTests(unittest.TestCase):
             self.assertEqual(json.loads(proc.stdout), {"ok": True, "stopped": True})
             self.assertEqual(item.log()[0][:4], ["script", "stop", "explain", "--cwd"])
             self.assertFalse(json.loads((item.fake_root / "state.json").read_text(encoding="utf-8"))["running"])
-            (item.fake_root / "log.jsonl").unlink()
+
+    def test_stop_unregistered(self):
+        with world() as item:
             item.write_state(registered=False, running=False)
             proc = item.cli("stop")
             self.assertEqual(proc.returncode, 0)
             self.assertEqual(json.loads(proc.stdout), {"ok": True, "stopped": False})
+
+    def test_stdout_error_json_is_still_returned(self):
+        with world() as item:
+            item.write_state(
+                stdout_error=True,
+                force_error={"code": "DAEMON_UNAVAILABLE", "message": "daemon down"},
+            )
+            with applied(item.env_overlay):
+                result = _show().run_paseo(["script", "ls", "--json"])
+            self.assertEqual(
+                result,
+                {"error": {"code": "DAEMON_UNAVAILABLE", "message": "daemon down"}},
+            )
 
     def test_helpers_return_shapes(self):
         with world() as item:
