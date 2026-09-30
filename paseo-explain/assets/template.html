@@ -18,8 +18,9 @@ See THIRD_PARTY_LICENSES.md.
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 var(--sans);min-height:100vh;
 background-image:radial-gradient(1200px 600px at 15% -10%,rgba(106,169,255,.07),transparent 60%),radial-gradient(1000px 500px at 100% 0%,rgba(162,1,255,.06),transparent 60%),radial-gradient(800px 600px at 50% 120%,rgba(70,249,184,.04),transparent 60%)}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%)}
-.top{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;padding:10px 28px;background:rgba(10,13,18,.82);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font:12px var(--mono)}
-.top b{color:var(--text);letter-spacing:.06em}.top .sp{flex:1}.top nav a{color:var(--muted);text-decoration:none;margin-left:14px}.top nav a:hover{color:var(--mint)}
+.top{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;background:rgba(10,13,18,.82);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font:12px var(--mono)}
+.toprow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 28px;min-width:0}
+.top b{color:var(--text);letter-spacing:.06em}.top .sp{flex:1}.top nav{display:flex;gap:14px;overflow-x:auto;padding:0 28px 8px}.top nav:empty{display:none}.top nav a{color:var(--muted);text-decoration:none;flex:none;white-space:nowrap}.top nav a:hover{color:var(--mint)}
 .badge{border:1px solid var(--border);border-radius:99px;padding:3px 10px;color:var(--muted);background:rgba(255,255,255,.015)}
 .tbtn{font:11px var(--mono);border:1px solid var(--border);background:var(--panel);color:var(--muted);border-radius:99px;padding:3px 10px;cursor:pointer}.tbtn:hover{color:var(--text);border-color:var(--border-2)}
 main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:30px 28px 80px}
@@ -47,7 +48,7 @@ h1{font:600 clamp(28px,3.6vw,44px)/1.08 var(--sans);letter-spacing:-.02em;margin
 .n.lit rect{stroke:var(--mint);stroke-width:2.2;filter:drop-shadow(0 0 10px rgba(70,249,184,.55))}.dimmed .n:not(.lit){opacity:.35}
 .e{stroke:#3a4760;stroke-width:1.4;fill:none}.e.new{stroke:var(--mint);stroke-opacity:.7;stroke-dasharray:5 5;animation:dash 1.2s linear infinite}@keyframes dash{to{stroke-dashoffset:-20}}
 @media (prefers-reduced-motion: reduce){.e.new{animation:none}}
-.el{font:11px var(--mono);fill:var(--dim)}.zone{fill:none;stroke:var(--border-2);stroke-dasharray:3 5}.zone.new{stroke:var(--mint);stroke-opacity:.5}.zl{font:10px var(--mono);letter-spacing:.16em;fill:var(--dim)}.zl.new{fill:var(--mint)}
+.el{font:11px var(--mono);fill:var(--dim);paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round}.zone{fill:none;stroke:var(--border-2);stroke-dasharray:3 5}.zone.new{stroke:var(--mint);stroke-opacity:.5}.zl{font:10px var(--mono);letter-spacing:.16em;fill:var(--dim)}.zl.new{fill:var(--mint)}
 .pkt{fill:var(--mint);filter:drop-shadow(0 0 6px var(--mint))}
 section{margin-top:48px}h2{font:600 22px/1.2 var(--sans);letter-spacing:-.01em;margin:0 0 4px}.sub2{color:var(--muted);margin:0 0 16px;font-size:14.5px}
 .num{font:600 11px var(--mono);color:var(--mint);margin-right:10px;border:1px solid rgba(70,249,184,.35);border-radius:6px;padding:2px 6px;vertical-align:3px}
@@ -70,6 +71,7 @@ aside .src{background:var(--bg-2);border:1px solid var(--border);border-left:3px
 aside .src.flagged{border-left-color:var(--amber)}
 .note{font:11px var(--mono);color:var(--dim);margin-top:50px;border-top:1px solid var(--border);padding-top:12px}
 @media(max-width:760px){.cols,.dec,.risks{grid-template-columns:1fr}.top nav{display:none}}
+@media(min-width:1100px){.toprow,.levels{flex-wrap:nowrap}}
 /* light theme */
 body.light{--bg:#f6f7fa;--bg-2:#ffffff;--panel:#ffffff;--panel-2:#f1f3f8;--border:#e2e6ee;--border-2:#c8d0dd;--text:#0f1419;--muted:#555f70;--dim:#8492a8;--mint:#00b377;--sky:#2a6fdb;--mag:#d63a5f;--amber:#c98a00;--violet:#7a4ed1;--brand-violet:#7a1cd9;
 background-image:radial-gradient(1200px 600px at 15% -10%,rgba(42,111,219,.06),transparent 60%),radial-gradient(1000px 500px at 100% 0%,rgba(122,28,217,.05),transparent 60%)}
@@ -95,6 +97,7 @@ button.chip:hover{border-color:var(--sky);color:var(--sky)}
 .banner{border:1px solid var(--border);border-left:3px solid var(--sky);background:var(--panel);border-radius:10px;padding:10px 14px;margin:0 0 22px;color:var(--muted);font-size:14px}
 .banner p{margin:4px 0}
 .banner .flag{color:var(--amber)}
+.quote{font-style:italic;color:var(--muted);border-left:3px solid var(--sky);margin:6px 0 2px;padding:2px 0 2px 10px}.quote .chip{font-style:normal}
 .conf{font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-right:6px}
 .evrow{margin:6px 0 10px}
 abbr.term{border-bottom:1px dotted var(--muted);text-decoration:none;cursor:help}
@@ -115,7 +118,6 @@ aside .actions button{font:13px var(--sans);text-align:left;border:1px solid var
 aside .actions button:hover{border-color:var(--sky)}
 .copybox{width:100%;margin-top:10px;font:12px var(--mono);color:var(--text);background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px}
 h1 .term{background:linear-gradient(90deg,var(--mint),var(--sky) 50%,var(--brand-violet));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;border-bottom-color:var(--sky)}
-.top{flex-wrap:wrap}
 dl{margin:0}
 dt{font-weight:600;margin-top:10px}
 dd{margin:2px 0 0;color:var(--muted)}
@@ -173,15 +175,18 @@ details{break-inside:avoid}
       drop: "What if we drop this?",
       close: "Close",
       theme: "Theme",
+      light: "Light",
+      dark: "Dark",
       noTask: "no task",
       noTest: "no test",
       requirement: "Requirement",
       test: "Test",
       diagramOffline: "Diagram library could not be loaded (offline?)",
       diagramDraw: "Diagram could not be drawn",
-      flagged: "Contains instruction-like text in the sources; treated as data",
+      flagged: "Contains instruction-like text in the sources{anchors}; treated as data",
       flaggedMark: "flagged",
-      independent: "Fact-checked by {model} (another model family): {v} verified · {c} corrected",
+      independent: "Fact-checked by {model} (another model family)",
+      independentCounts: ": {v} verified · {c} corrected",
       correctedSuffix: "; {n} corrections applied afterwards by the explainer (not re-checked)",
       sameFamily: "Checked by the same model family ({model})",
       indepUnknown: "Fact-checked by {model}; independence unknown",
@@ -222,15 +227,18 @@ details{break-inside:avoid}
       drop: "Wat als we dit laten vallen?",
       close: "Sluiten",
       theme: "Thema",
+      light: "Licht",
+      dark: "Donker",
       noTask: "geen taak",
       noTest: "geen test",
       requirement: "Eis",
       test: "Test",
       diagramOffline: "Diagrambibliotheek kon niet worden geladen (offline?)",
       diagramDraw: "Diagram kon niet worden getekend",
-      flagged: "Bevat instructie-achtige tekst in de bronnen; behandeld als data",
+      flagged: "Bevat instructie-achtige tekst in de bronnen{anchors}; behandeld als data",
       flaggedMark: "gemarkeerd",
-      independent: "Feitencheck door {model} (een andere modelfamilie): {v} geverifieerd · {c} gecorrigeerd",
+      independent: "Feitencheck door {model} (een andere modelfamilie)",
+      independentCounts: ": {v} geverifieerd · {c} gecorrigeerd",
       correctedSuffix: "; {n} correcties daarna toegepast door de uitlegger (niet opnieuw gecontroleerd)",
       sameFamily: "Gecontroleerd door dezelfde modelfamilie ({model})",
       indepUnknown: "Feitencheck door {model}; onafhankelijkheid onbekend",
@@ -667,13 +675,14 @@ function openPanel(title, detail, ids, confidence) {
   function factText() {
     var label = meta.check_label || "not_checked";
     var model = (meta.models && meta.models.fact_checker) || "";
-    var counts = meta.fact_counts || {};
-    var v = counts.verified || 0;
-    var c = counts.corrected || 0;
+    var counts = meta.fact_counts;
     var n = (meta.checks && meta.checks.fact_check_corrections) || 0;
     var s;
     if (label === "independent" || label === "independent_corrected") {
-      s = fill(t("independent"), {model: model, v: v, c: c});
+      s = fill(t("independent"), {model: model});
+      if (counts != null && typeof counts === "object") {
+        s += fill(t("independentCounts"), {v: counts.verified || 0, c: counts.corrected || 0});
+      }
       if (label === "independent_corrected") s += fill(t("correctedSuffix"), {n: n});
       return s;
     }
@@ -688,6 +697,18 @@ function openPanel(title, detail, ids, confidence) {
       if (Object.prototype.hasOwnProperty.call(evidence, k) && evidence[k] && evidence[k].flagged) return true;
     }
     return false;
+  }
+
+  function flaggedNotice() {
+    var total = meta.flagged_total;
+    var anchors = arr(meta.flagged_anchors);
+    var parts = [];
+    var i;
+    if (!((typeof total === "number" && total > 0) || anyFlagged())) return "";
+    for (i = 0; i < anchors.length; i++) {
+      if (anchors[i]) parts.push(String(anchors[i]));
+    }
+    return fill(t("flagged"), {anchors: parts.length ? " (" + parts.join(", ") + ")" : ""});
   }
 
   function footerText() {
@@ -775,8 +796,13 @@ function openPanel(title, detail, ids, confidence) {
       setAttr(e.line, "x2", p2.x);
       setAttr(e.line, "y2", p2.y);
       if (e.labelEl) {
-        setAttr(e.labelEl, "x", (p1.x + p2.x) / 2);
-        setAttr(e.labelEl, "y", (p1.y + p2.y) / 2);
+        var mx = (p1.x + p2.x) / 2;
+        var my = (p1.y + p2.y) / 2;
+        var dx = p2.x - p1.x;
+        var dy = p2.y - p1.y;
+        var len = Math.sqrt(dx * dx + dy * dy) || 1;
+        setAttr(e.labelEl, "x", mx + (-dy / len) * 10);
+        setAttr(e.labelEl, "y", my + (dx / len) * 10);
       }
     }
   }
@@ -823,6 +849,7 @@ function openPanel(title, detail, ids, confidence) {
     }
     drawEdges();
     storageDel(layoutKey());
+    hidePacket();
   }
 
   function clearNodeSel() {
@@ -898,16 +925,19 @@ function openNode(n) {
     y1 = a.y + a.h / 2;
     x2 = b.x + b.w / 2;
     y2 = b.y + b.h / 2;
-    if (reducedMotion()) { setPacket(x2, y2); return; }
+    if (reducedMotion()) { hidePacket(); return; }
     start = null;
     function frame(now) {
       var u;
       if (token !== packetAnim) return;
       if (start == null) start = now;
       u = (now - start) / 900;
-      if (u > 1) u = 1;
+      if (u >= 1) {
+        if (packet) packet.classList.add("hide");
+        return;
+      }
       setPacket(x1 + (x2 - x1) * u, y1 + (y2 - y1) * u);
-      if (u < 1) requestAnimationFrame(frame);
+      requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   }
@@ -968,8 +998,15 @@ function openNode(n) {
         bindText(span, item.text);
         li.appendChild(span);
         if (item.quote && item.quote.text) {
-          quote = el("div", {"class": "src"});
-          quote.appendChild(document.createTextNode(item.quote.text));
+          quote = el("div", {"class": "quote"});
+          quote.appendChild(document.createTextNode("\u201c" + item.quote.text));
+          if (item.quote.evidence) {
+            rowAppend(quote, chips([item.quote.evidence], {
+              title: sec.title || t(key),
+              detail: item.quote.text,
+              confidence: item.confidence
+            }));
+          }
           li.appendChild(quote);
         }
         rowAppend(li, evidenceRow(item.evidence, item.confidence, {
@@ -1381,11 +1418,13 @@ function openNode(n) {
       }
       if (steps.length) {
         var btn = player.querySelector("button.on") || player.children[1];
+        var paused = steps[stepIndex] || {};
         if (btn) {
           btn.classList.remove("on");
           btn.textContent = t("play");
           setAttr(btn, "aria-label", t("play"));
         }
+        if (!paused.from || !paused.to) hidePacket();
       }
     }
     function togglePlay(playBtn, stepList) {
@@ -1408,6 +1447,7 @@ function openNode(n) {
   function build() {
     var anchor = document.getElementById("pe-data");
     var top = el("header", {"class": "top"});
+    var row = el("div", {"class": "toprow"});
     var nav = el("nav", {"aria-label": t("explanation")});
     var main = el("main");
     var kicker = el("div", {"class": "kicker"});
@@ -1420,8 +1460,9 @@ function openNode(n) {
     var gloss = arr(explain.glossary);
     var i, fact, li, b, hero, heroBox, secEl, dl, dt, dd, skipped, grade;
     document.body.classList.toggle("light", theme === "light");
-    top.appendChild(el("b", {}, "paseo-explain"));
-    top.appendChild(el("span", {"class": "badge"}, explain.kind === "idea" ? t("idea") : t("planSpec")));
+    function themeLabel() { return theme === "light" ? t("light") : t("dark"); }
+    row.appendChild(el("b", {}, "paseo-explain"));
+    row.appendChild(el("span", {"class": "badge"}, explain.kind === "idea" ? t("idea") : t("planSpec")));
     var levelsWrap = el("span", {"class": "levels"});
     for (i = 1; i <= 5; i++) {
       (function (n) {
@@ -1440,15 +1481,19 @@ function openNode(n) {
         levelsWrap.appendChild(btn);
       })(i);
     }
-    top.appendChild(levelsWrap);
-    top.appendChild(el("span", {"class": "sp"}));
-    top.appendChild(nav);
-    top.appendChild(button("◐", t("theme"), "tbtn", function () {
+    row.appendChild(levelsWrap);
+    row.appendChild(el("span", {"class": "sp"}));
+    var themeBtn = button(themeLabel(), t("theme") + ": " + themeLabel(), "tbtn", function () {
       theme = theme === "light" ? "dark" : "light";
       document.body.classList.toggle("light", theme === "light");
       storageSet("paseo-explain.theme", theme);
+      themeBtn.textContent = themeLabel();
+      setAttr(themeBtn, "aria-label", t("theme") + ": " + themeLabel());
       if (globalThis.mermaid) renderMermaid();
-    }));
+    });
+    row.appendChild(themeBtn);
+    top.appendChild(row);
+    top.appendChild(nav);
     kicker.appendChild(document.createTextNode(t("explanation") + " · " + (explain.kind === "idea" ? t("idea") : t("planSpec"))));
     h1.appendChild(document.createTextNode(explain.title || ""));
     wrapGlossary(h1);
@@ -1483,7 +1528,8 @@ function openNode(n) {
       grade = meta.reader_grade;
       banner.appendChild(el("p", {}, fill(t("reader"), {correct: grade.correct, total: grade.total})));
     }
-    if (anyFlagged()) banner.appendChild(el("p", {"class": "flag"}, t("flagged")));
+    var notice = flaggedNotice();
+    if (notice) banner.appendChild(el("p", {"class": "flag"}, notice));
     main.appendChild(banner);
     hero = explain.hero || {};
     heroBox = buildHero(hero);
