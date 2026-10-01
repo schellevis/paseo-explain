@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from explainlib.common import ExplainError, load_session, save_session, server_dir, sessions_root, write_json
+from explainlib.config import load_config
 
 
 def _explain_py() -> str:
@@ -72,11 +73,19 @@ def _raise_error(err):
 def ensure_server_project() -> Path:
     directory = Path(_server_path())
     directory.mkdir(parents=True, exist_ok=True)
+    cfg = load_config()
+    port = cfg["values"]["serve_port"]
+    host = cfg["values"]["serve_host"]
     command = (
         f"python3 {shlex.quote(_explain_py())} serve --root "
-        f"{shlex.quote(os.path.abspath(sessions_root()))} --port $PASEO_PORT"
+        f"{shlex.quote(os.path.abspath(sessions_root()))} --port {port if port is not None else '$PASEO_PORT'}"
     )
-    desired = {"scripts": {"explain": {"type": "service", "command": command}}}
+    if port is not None or cfg["sources"]["serve_host"] == "config":
+        command += f" --host {shlex.quote(host)}"
+    service = {"type": "service", "command": command}
+    if port is not None:
+        service["port"] = port
+    desired = {"scripts": {"explain": service}}
     path = directory / "paseo.json"
     if path.is_file():
         try:
@@ -220,7 +229,7 @@ def _urls(entry, slug: str):
     if not isinstance(local_base, str) or local_base == "":
         raise ExplainError(3, "localProxyUrl missing")
     local_url = local_base.rstrip("/") + "/" + slug + "/"
-    public = entry.get("publicProxyUrl")
+    public = load_config()["values"]["public_base_url"] or entry.get("publicProxyUrl")
     if isinstance(public, str) and public != "":
         public_url = public.rstrip("/") + "/" + slug + "/"
     else:

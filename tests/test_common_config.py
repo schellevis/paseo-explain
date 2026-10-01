@@ -76,7 +76,8 @@ class CommonConfigTests(unittest.TestCase):
         self.assertFalse(report["exists"])
         self.assertEqual(report["warnings"], [])
         self.assertTrue(report["path"].endswith("/cfg/paseo-explain/config.json"))
-        for key, value in (("reading_level", 3), ("levels", 3), ("theme", "dark"), ("lang", "en")):
+        for key, value in (("reading_level", 3), ("levels", 3), ("theme", "dark"), ("lang", "en"),
+                           ("serve_host", "127.0.0.1"), ("serve_port", None), ("public_base_url", None)):
             self.assertEqual(report["values"][key], {"value": value, "source": "default"})
 
     def test_config_file_values(self):
@@ -90,6 +91,35 @@ class CommonConfigTests(unittest.TestCase):
         self.assertEqual(report["values"]["levels"], {"value": 5, "source": "config"})
         self.assertEqual(report["values"]["theme"], {"value": "light", "source": "config"})
         self.assertEqual(report["values"]["lang"], {"value": "nl", "source": "config"})
+
+    def test_direct_serving_config_values(self):
+        with helpers.temp_home() as env:
+            _write_config(env, {"serve_host": "::1", "serve_port": 8300,
+                                "public_base_url": "https://my-host:8300/base/"})
+            with mock.patch.dict(os.environ, env, clear=True):
+                report = config.config_report()
+        self.assertEqual(report["warnings"], [])
+        for key, value in (("serve_host", "::1"), ("serve_port", 8300),
+                           ("public_base_url", "https://my-host:8300/base/")):
+            self.assertEqual(report["values"][key], {"value": value, "source": "config"})
+
+    def test_direct_serving_invalid_values_warned(self):
+        bad = [
+            ("serve_host", "example.com"), ("serve_host", 42),
+            ("serve_port", True), ("serve_port", 1023), ("serve_port", 65536),
+            ("public_base_url", "relative/path"),
+            ("public_base_url", "ftp://my-host"),
+            ("public_base_url", "http://my-host/?q=1"),
+            ("public_base_url", "http://my-host/#part"),
+        ]
+        for key, value in bad:
+            with self.subTest(key=key, value=value), helpers.temp_home() as env:
+                _write_config(env, {key: value})
+                with mock.patch.dict(os.environ, env, clear=True):
+                    report = config.config_report()
+                self.assertEqual(len(report["warnings"]), 1)
+                self.assertIn(key, report["warnings"][0])
+                self.assertEqual(report["values"][key]["source"], "default")
 
     def test_config_invalid_values_warned(self):
         with helpers.temp_home() as env:

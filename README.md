@@ -19,9 +19,19 @@ Copy or symlink the `paseo-explain/` directory into a skills directory such as `
 
 ## Viewing and reading levels
 
-The skill starts a loopback service through Paseo and opens the page in a Desktop tab. If the tab cannot reach the service through the proxy, it can inject the page into that tab; reload then clears the injected page, and the skill can re-show it. Other clients receive a local URL and can use the Markdown twin.
+By default, the skill starts a loopback service through Paseo and opens the page in a Desktop tab. If the tab cannot reach the service through the proxy, it can inject the page into that tab; reload then clears the injected page, and the skill can re-show it. Other clients receive a local URL and can use the Markdown twin.
 
-Phone access requires the Paseo daemon's `serviceProxy.publicBaseUrl` and wildcard DNS. For example, a generic base `https://paseo.example.org` can expose services at `https://explain--<project>.paseo.example.org`. Paseo Explain reports a public URL only when the daemon provides one; the skill never edits daemon settings.
+One phone-access option uses the Paseo daemon's `serviceProxy.publicBaseUrl` and wildcard DNS. For example, a generic base `https://paseo.example.org` can expose services at `https://explain--<project>.paseo.example.org`. Paseo Explain uses the daemon's public URL when available; the skill never edits daemon settings.
+
+### Reaching the page from other devices
+
+For a remote or Docker daemon, set these optional keys in the Paseo Explain config file:
+
+```json
+{"serve_host": "0.0.0.0", "serve_port": 8300, "public_base_url": "http://my-host:8300"}
+```
+
+`serve_host` chooses the bind address, `serve_port` fixes the service port, and `public_base_url` supplies the URL opened first in Desktop and returned for other devices. Publish the port in your own container or firewall configuration. The read-only pages are reachable by anyone who can reach that port.
 
 Written levels are 1 Simple (B1), 2 Accessible, 3 Mixed, 4 Technical and 5 Expert. The default output writes levels 1, 3 and 5; `--levels 5` writes all five. `--level` selects the initial level. Preferences may be stored at `$XDG_CONFIG_HOME/paseo-explain/config.json`, or `~/.config/paseo-explain/config.json` when that variable is unset, with optional `reading_level`, `levels`, `theme`, and `lang` keys. The skill reads this file but never writes it.
 

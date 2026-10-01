@@ -290,6 +290,65 @@ def _show():
 
 
 class ShowTests(unittest.TestCase):
+    def test_fixed_port_and_host_service_config(self):
+        with world() as item:
+            item.init()
+            item.start_http()
+            item.write_state(registered=True, running=True)
+            cfg = item.cfg / "paseo-explain" / "config.json"
+            cfg.parent.mkdir(parents=True)
+            cfg.write_text(json.dumps({"serve_port": 8300, "serve_host": "0.0.0.0"}), encoding="utf-8")
+            with applied(item.env_overlay), result_double(ResultDouble()):
+                _show().show(item.session)
+            command = (f"python3 {shlex.quote(item.explain_py())} serve --root "
+                       f"{shlex.quote(item.sessions_path())} --port 8300 --host 0.0.0.0")
+            self.assertEqual(
+                json.loads((Path(item.server_path()) / "paseo.json").read_text(encoding="utf-8")),
+                {"scripts": {"explain": {"type": "service", "command": command, "port": 8300}}},
+            )
+
+    def test_host_only_keeps_paseo_port(self):
+        with world() as item:
+            item.init()
+            item.start_http()
+            item.write_state(registered=True, running=True)
+            cfg = item.cfg / "paseo-explain" / "config.json"
+            cfg.parent.mkdir(parents=True)
+            cfg.write_text(json.dumps({"serve_host": "::1"}), encoding="utf-8")
+            with applied(item.env_overlay), result_double(ResultDouble()):
+                _show().show(item.session)
+            entry = json.loads((Path(item.server_path()) / "paseo.json").read_text(encoding="utf-8"))["scripts"]["explain"]
+            self.assertEqual(entry["command"],
+                             f"python3 {shlex.quote(item.explain_py())} serve --root "
+                             f"{shlex.quote(item.sessions_path())} --port $PASEO_PORT --host ::1")
+            self.assertNotIn("port", entry)
+
+    def test_fixed_port_uses_default_loopback_host(self):
+        with world() as item:
+            item.init()
+            item.start_http()
+            item.write_state(registered=True, running=True)
+            cfg = item.cfg / "paseo-explain" / "config.json"
+            cfg.parent.mkdir(parents=True)
+            cfg.write_text(json.dumps({"serve_port": 8300}), encoding="utf-8")
+            with applied(item.env_overlay), result_double(ResultDouble()):
+                _show().show(item.session)
+            entry = json.loads((Path(item.server_path()) / "paseo.json").read_text(encoding="utf-8"))["scripts"]["explain"]
+            self.assertEqual(entry["port"], 8300)
+            self.assertTrue(entry["command"].endswith("--port 8300 --host 127.0.0.1"))
+
+    def test_public_base_url_precedes_proxy_url(self):
+        with world() as item:
+            item.init()
+            item.start_http()
+            item.write_state(registered=True, running=True, public="https://proxy.example/base")
+            cfg = item.cfg / "paseo-explain" / "config.json"
+            cfg.parent.mkdir(parents=True)
+            cfg.write_text(json.dumps({"public_base_url": "http://my-host:8300/base/"}), encoding="utf-8")
+            with applied(item.env_overlay), result_double(ResultDouble()):
+                result = _show().show(item.session)
+            self.assertEqual(result["public_url"], "http://my-host:8300/base/demo/")
+
     def test_fake_shebang_and_mode(self):
         with world() as item:
             first = item.fake.read_text(encoding="utf-8").splitlines()[0]
@@ -336,6 +395,11 @@ class ShowTests(unittest.TestCase):
                 json.loads((Path(server) / "paseo.json").read_text(encoding="utf-8")),
                 {"scripts": {"explain": {"type": "service", "command": command}}},
             )
+            expected = json.dumps(
+                {"scripts": {"explain": {"type": "service", "command": command}}},
+                ensure_ascii=False, indent=2,
+            ) + "\n"
+            self.assertEqual((Path(server) / "paseo.json").read_text(encoding="utf-8"), expected)
             urls = {"local": "http://explain.localhost/demo/", "public": None}
             self.assertEqual(result["ok"], True)
             self.assertEqual(result["local_url"], urls["local"])

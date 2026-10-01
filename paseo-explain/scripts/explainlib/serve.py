@@ -1,10 +1,12 @@
-"""Loopback HTTP server for explain sessions."""
+"""HTTP server for explain sessions."""
 
 import html
+import ipaddress
 import json
 import os
 import re
 import socket
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -30,8 +32,6 @@ _URI_TOO_LONG = b"<!DOCTYPE html><html><head><title>414</title></head><body>URI 
 _INDEX_RE = re.compile(r"^/$")
 _PAGE_RE = re.compile(r"^/([^/]+)/$")
 _MD_RE = re.compile(r"^/([^/]+)/explain\.md$")
-
-_ALLOWED_HOSTS = ("127.0.0.1", "::1")
 
 
 def _inside(root_real: str, path: str) -> bool:
@@ -235,10 +235,12 @@ def make_handler(root: Path):
 
 
 def make_server(root, host, port):
-    if host not in _ALLOWED_HOSTS:
-        raise ValueError("host must be 127.0.0.1 or ::1")
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError as exc:
+        raise ValueError("host must be an IP address literal") from exc
     handler = make_handler(Path(root))
-    server_cls = _IPv6Server if host == "::1" else ThreadingHTTPServer
+    server_cls = _IPv6Server if address.version == 6 else ThreadingHTTPServer
     server = server_cls((host, int(port)), handler)
     server.daemon_threads = True
     return server
@@ -247,6 +249,8 @@ def make_server(root, host, port):
 def serve(root: str, host: str, port: int) -> None:
     server = make_server(root, host, port)
     try:
+        if not ipaddress.ip_address(host).is_loopback:
+            print(f"serving on {host}:{server.server_address[1]}, reachable from the network", file=sys.stderr)
         server.serve_forever()
     finally:
         server.server_close()

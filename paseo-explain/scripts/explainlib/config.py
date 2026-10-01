@@ -1,17 +1,22 @@
 """Local reading-level configuration."""
 
 import json
+import ipaddress
 import os
 import re
 from pathlib import Path
+from urllib.parse import urlsplit
 
 _LANG_RE = re.compile(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$")
-_KEYS = ("reading_level", "levels", "theme", "lang")
+_KEYS = ("reading_level", "levels", "theme", "lang", "serve_host", "serve_port", "public_base_url")
 _DEFAULTS = {
     "reading_level": 3,
     "levels": 3,
     "theme": "dark",
     "lang": "en",
+    "serve_host": "127.0.0.1",
+    "serve_port": None,
+    "public_base_url": None,
 }
 
 
@@ -35,6 +40,27 @@ def _valid(key: str, value) -> bool:
         return value in ("dark", "light")
     if key == "lang":
         return isinstance(value, str) and _LANG_RE.fullmatch(value) is not None
+    if key == "serve_host":
+        if not isinstance(value, str):
+            return False
+        try:
+            ipaddress.ip_address(value)
+            return True
+        except ValueError:
+            return False
+    if key == "serve_port":
+        return _is_int(value) and 1024 <= value <= 65535
+    if key == "public_base_url":
+        if not isinstance(value, str) or any(char.isspace() for char in value):
+            return False
+        try:
+            parsed = urlsplit(value)
+            return (parsed.scheme in ("http", "https") and bool(parsed.netloc)
+                    and bool(parsed.hostname) and parsed.query == "" and parsed.fragment == ""
+                    and "?" not in value and "#" not in value
+                    and (parsed.port is None or parsed.port > 0))
+        except ValueError:
+            return False
     return False
 
 

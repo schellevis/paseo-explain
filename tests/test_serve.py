@@ -1,9 +1,11 @@
 """Loopback server routing, headers, and realpath containment."""
 
 import html
+import contextlib
 import http.client
 import http.server
 import json
+import io
 import os
 import socket
 import sys
@@ -266,9 +268,28 @@ class ServerTests(unittest.TestCase):
         self.assert_security(headers, NONE_CSP)
         self.assertNotIn(SENTINEL_MD, body)
 
-    def test_make_server_rejects_non_loopback(self):
+    def test_make_server_accepts_all_interfaces(self):
+        server = serve.make_server(self.root, "0.0.0.0", 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            status, _headers, body = _fetch(server.server_address[1], "GET", "/good-1/")
+            self.assertEqual(status, 200)
+            self.assertEqual(body, HTML_BYTES)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+
+    def test_make_server_rejects_hostname(self):
         with self.assertRaises(ValueError):
-            serve.make_server(self.root, "0.0.0.0", 0)
+            serve.make_server(self.root, "example.com", 0)
+
+    def test_non_loopback_serve_warns(self):
+        warning = io.StringIO()
+        with mock.patch.object(serve.ThreadingHTTPServer, "serve_forever"), contextlib.redirect_stderr(warning):
+            serve.serve(self.root, "0.0.0.0", 0)
+        self.assertRegex(warning.getvalue(), r"^serving on 0\.0\.0\.0:\d+, reachable from the network\n$")
 
     def test_make_handler_type(self):
         handler = serve.make_handler(self.root)
