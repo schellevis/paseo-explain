@@ -13,6 +13,7 @@ This is a Python standard-library skill for explaining plans, specifications and
 - `paseo-explain/assets/template.html`: HTML, CSS and JavaScript page template.
 - `tests/` and `tests/fixtures/`: unit/integration tests and generic source examples.
 - `LICENSE`, `paseo-explain/LICENSE`, `THIRD_PARTY_LICENSES.md`: project and third-party licences.
+- `CLAUDE.md`: symlink to `AGENTS.md` (the only tracked symlink `lint` allows).
 
 ## Principles
 

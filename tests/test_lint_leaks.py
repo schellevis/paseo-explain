@@ -446,6 +446,28 @@ class LintTests(unittest.TestCase):
         report = run_lint(self._repo(mutate))
         self.assertTrue(any("symlink" in msg and "README.md" in msg for msg in messages(report)))
 
+    def test_claude_md_symlink_to_agents_md_is_allowed(self):
+        def mutate(root: Path) -> None:
+            _write(root / "AGENTS.md", "# Agents\n")
+            (root / "CLAUDE.md").symlink_to("AGENTS.md")
+
+        report = run_lint(self._repo(mutate))
+        self.assertFalse(any("CLAUDE.md" in msg for msg in messages(report)), messages(report))
+
+    def test_claude_md_must_point_to_agents_md(self):
+        def mutate(root: Path) -> None:
+            (root / "CLAUDE.md").symlink_to("README.md")
+
+        report = run_lint(self._repo(mutate))
+        self.assertTrue(any("CLAUDE.md must be a symlink to AGENTS.md" in msg for msg in messages(report)))
+
+    def test_claude_md_regular_file_is_rejected(self):
+        def mutate(root: Path) -> None:
+            _write(root / "CLAUDE.md", "# copy\n")
+
+        report = run_lint(self._repo(mutate))
+        self.assertTrue(any("CLAUDE.md must be a symlink to AGENTS.md" in msg for msg in messages(report)))
+
     def test_outside_git_skips_tracked_file_check(self):
         root = self._repo(git=False)
         report = run_lint(root)

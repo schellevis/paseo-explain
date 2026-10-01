@@ -41,6 +41,8 @@ REFERENCE_FILES = (
     "paseo-explain/references/integration.md",
     "paseo-explain/references/design.md",
 )
+# Tracked symlinks that are allowed, mapped to their required target (CLAUDE.md mirrors AGENTS.md).
+ALLOWED_SYMLINKS = {"CLAUDE.md": "AGENTS.md"}
 R1_FILES = frozenset(
     {
         ".gitignore",
@@ -379,6 +381,10 @@ def lint(repo_root=None) -> dict:
     else:
         for mode, rel in tracked:
             full = repo / rel
+            if rel in ALLOWED_SYMLINKS:
+                if not (mode == "120000" and full.is_symlink() and os.readlink(full) == ALLOWED_SYMLINKS[rel]):
+                    add(rel, f"{rel} must be a symlink to {ALLOWED_SYMLINKS[rel]}")
+                continue
             if rel not in R1_FILES:
                 add(rel, f"tracked file is outside the repository layout: {rel}")
             if mode == "120000" or full.is_symlink():
