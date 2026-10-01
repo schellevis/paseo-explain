@@ -16,6 +16,8 @@ from explainlib.common import (
     words,
     write_json,
 )
+from explainlib.repo import load_repomap
+from explainlib.secretscan import find_secrets_in
 from explainlib.validate import (
     claim_leaves,
     claim_units,
@@ -31,7 +33,8 @@ _PLAN_CHECK_KINDS = (
     "contradiction",
 )
 _SKIP_STEPS = {"factcheck": "fact_check", "reader": "reader_test"}
-_LIST_COLUMNS = ("now", "next", "unchanged", "requirements", "items")
+_LIST_COLUMNS = ("now", "next", "unchanged", "requirements", "items", "entries", "steps")
+_GATE_NAMES = {"factcheck": "factcheck report", "reader": "reader report"}
 
 
 def _error(path, message):
@@ -113,6 +116,14 @@ def _leaf_limits(pointer: str):
         return ("words", 40)
     if parts[0] != "sections":
         return None
+    if "entries" in parts:
+        return ("chars", 1, 120) if parts[-1] == "path" else ("words", 40)
+    if "steps" in parts:
+        if parts[-1] == "title":
+            return ("chars", 1, 80)
+        if parts[-1] == "command":
+            return ("chars", 1, 200)
+        return ("words", 60)
     if "body" in parts:
         return ("words", 250)
     if "mermaid" in parts:
@@ -534,6 +545,14 @@ def _load_report_file(path: Path):
         raise ExplainError(3, f"cannot read {path.name}: {exc}") from exc
 
 
+def _inside(root: Path, path: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
 def check_report(session_dir, kind: str, file: str | None) -> dict:
     if kind not in _SKIP_STEPS:
         raise ExplainError(1, "kind must be factcheck or reader")
@@ -545,6 +564,10 @@ def check_report(session_dir, kind: str, file: str | None) -> dict:
     dest = root / f"{kind}.json"
     source = Path(file) if file else dest
     report = _load_report_file(source)
+    if session.get("kind") == "codebase" and find_secrets_in(report):
+        if _inside(root, source):
+            _unlink(source)
+        raise ExplainError(1, f"{_GATE_NAMES[kind]} contains a possible secret")
     if kind == "factcheck":
         request = _load_report_file(root / "checks" / "factcheck-request.json")
         frozen = _load_report_file(root / "checks" / "factcheck-explain.json")
@@ -706,6 +729,7 @@ def apply_corrections(session_dir, remove: list) -> dict:
         evidence if isinstance(evidence, dict) else {},
         session,
         brief if isinstance(brief, dict) else {},
+        repomap=load_repomap(root) if session.get("kind") == "codebase" else None,
     )
     if explain_errors:
         raise ExplainError(1, explain_errors)

@@ -1,0 +1,8 @@
+[project]
+name = "tasklist"
+version = "0.1.0"
+description = "A small to-do list command-line tool"
+requires-python = ">=3.10"
+
+[project.scripts]
+tasklist = "tasklist.cli:main"

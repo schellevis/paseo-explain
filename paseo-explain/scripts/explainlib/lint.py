@@ -40,6 +40,7 @@ REFERENCE_FILES = (
     "paseo-explain/references/display.md",
     "paseo-explain/references/integration.md",
     "paseo-explain/references/design.md",
+    "paseo-explain/references/codebase.md",
 )
 # Tracked symlinks that are allowed, mapped to their required target (CLAUDE.md mirrors AGENTS.md).
 ALLOWED_SYMLINKS = {"CLAUDE.md": "AGENTS.md"}
@@ -59,6 +60,7 @@ R1_FILES = frozenset(
         "paseo-explain/references/display.md",
         "paseo-explain/references/integration.md",
         "paseo-explain/references/design.md",
+        "paseo-explain/references/codebase.md",
         "paseo-explain/references/explain.schema.json",
         "paseo-explain/references/result.schema.json",
         "paseo-explain/scripts/explain.py",
@@ -75,6 +77,9 @@ R1_FILES = frozenset(
         "paseo-explain/scripts/explainlib/show.py",
         "paseo-explain/scripts/explainlib/lint.py",
         "paseo-explain/scripts/explainlib/leaks.py",
+        "paseo-explain/scripts/explainlib/secretscan.py",
+        "paseo-explain/scripts/explainlib/repo.py",
+        "paseo-explain/scripts/explainlib/survey.py",
         "tests/helpers.py",
         "tests/test_common_config.py",
         "tests/test_ingest.py",
@@ -86,6 +91,11 @@ R1_FILES = frozenset(
         "tests/test_show.py",
         "tests/test_lint_leaks.py",
         "tests/test_cli.py",
+        "tests/test_secretscan.py",
+        "tests/test_repo.py",
+        "tests/repo_helpers.py",
+        "tests/test_survey.py",
+        "tests/test_codebase.py",
         "tests/fixtures/autopilot-run/00-brief.md",
         "tests/fixtures/autopilot-run/01-spec.md",
         "tests/fixtures/autopilot-run/02-spec-resolution.md",
@@ -96,6 +106,17 @@ R1_FILES = frozenset(
         "tests/fixtures/idea-explain.json",
         "tests/fixtures/factcheck.json",
         "tests/fixtures/reader.json",
+        "tests/fixtures/survey.json",
+        "tests/fixtures/codebase-explain.json",
+        "tests/fixtures/sample-repo/AGENTS.md",
+        "tests/fixtures/sample-repo/README.md",
+        "tests/fixtures/sample-repo/checks/check_store.py",
+        "tests/fixtures/sample-repo/docs/overview.md",
+        "tests/fixtures/sample-repo/pyproject.toml",
+        "tests/fixtures/sample-repo/src/tasklist/__init__.py",
+        "tests/fixtures/sample-repo/src/tasklist/__main__.py",
+        "tests/fixtures/sample-repo/src/tasklist/cli.py",
+        "tests/fixtures/sample-repo/src/tasklist/store.py",
     }
 )
 _LINK = re.compile(r"references/[A-Za-z0-9_./-]+")

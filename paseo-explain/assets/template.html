@@ -8,7 +8,7 @@ See THIRD_PARTY_LICENSES.md.
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{NONCE}}' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'">
-<meta name="paseo-explain" content="0.1.0">
+<meta name="paseo-explain" content="0.2.0">
 <title>{{TITLE}}</title>
 <style>
 :root{--bg:#0a0d12;--bg-2:#0f1419;--panel:#121821;--panel-2:#182030;--border:#1f2937;--border-2:#2a3650;--text:#e6edf7;--muted:#8492a8;--dim:#5a6679;
@@ -51,8 +51,7 @@ h1{font:600 clamp(28px,3.6vw,44px)/1.08 var(--sans);letter-spacing:-.02em;margin
 .n.new rect{stroke:var(--mint);fill:rgba(70,249,184,.06)}.n.external rect{stroke:var(--sky);stroke-dasharray:4 3}
 .n{cursor:grab;transition:opacity .3s}.n.drag{cursor:grabbing}.n:hover rect,.n.sel rect{stroke:var(--sky);stroke-width:2}
 .n.lit rect{stroke:var(--mint);stroke-width:2.2;filter:drop-shadow(0 0 10px rgba(70,249,184,.55))}.dimmed .n:not(.lit){opacity:.35}
-.e{stroke:#3a4760;stroke-width:1.4;fill:none}.e.new{stroke:var(--mint);stroke-opacity:.7;stroke-dasharray:5 5;animation:dash 1.2s linear infinite}@keyframes dash{to{stroke-dashoffset:-20}}
-@media (prefers-reduced-motion: reduce){.e.new{animation:none}}
+.e{stroke:#3a4760;stroke-width:1.4;fill:none}.e.new{stroke:var(--mint);stroke-opacity:.7;stroke-dasharray:5 5}
 .el{font:11px var(--mono);fill:var(--dim);paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round}.zone{fill:none;stroke:var(--border-2);stroke-dasharray:3 5}.zone.new{stroke:var(--mint);stroke-opacity:.5}.zl{font:10px var(--mono);letter-spacing:.16em;fill:var(--dim)}.zl.new{fill:var(--mint)}
 .pkt{fill:var(--mint);filter:drop-shadow(0 0 6px var(--mint))}
 section{margin-top:48px}h2{font:600 22px/1.2 var(--sans);letter-spacing:-.01em;margin:0 0 4px}.sub2{color:var(--muted);margin:0 0 16px;font-size:14.5px}
@@ -112,6 +111,8 @@ body.light .prose p{color:#2b3442}
 .mmnote{font:12px var(--mono);color:var(--amber);margin:8px 0}
 .mmnote:empty{display:none}
 .cov{overflow-x:auto}
+.map td,.map th{text-align:left;vertical-align:top}.map td:first-child{white-space:nowrap}
+.steps{margin:0;padding-left:22px}.steps li{margin:0 0 14px}.steps h4{margin:0 0 4px;font-size:15.5px}.steps p{margin:0 0 6px;font-size:14px;color:var(--muted)}.steps pre{margin:6px 0;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg-2);overflow-x:auto;font:13px var(--mono)}
 .gap{color:var(--mag);font:600 11px var(--mono)}
 th .chip.sel,.chip.sel{border-color:var(--sky);color:var(--sky)}
 .n:focus{outline:none}
@@ -156,6 +157,13 @@ details{break-inside:avoid}
       explanation: "Explanation",
       planSpec: "plan + spec",
       idea: "idea",
+      codebase: "codebase",
+      documented: "documented",
+      withheld: "withheld (possible secret)",
+      depthDocs: "Based on documentation; code not read",
+      depthCode: "Based on documentation and {n} code excerpts",
+      path: "Path",
+      role: "Role",
       notGenerated: "not generated at this level",
       overview: "Overview",
       reset: "Reset layout",
@@ -208,6 +216,13 @@ details{break-inside:avoid}
       explanation: "Uitleg",
       planSpec: "plan + specificatie",
       idea: "idee",
+      codebase: "codebase",
+      documented: "gedocumenteerd",
+      withheld: "achtergehouden (mogelijk geheim)",
+      depthDocs: "Gebaseerd op documentatie; code niet gelezen",
+      depthCode: "Gebaseerd op documentatie en {n} codefragmenten",
+      path: "Pad",
+      role: "Rol",
       notGenerated: "niet gegenereerd op dit niveau",
       overview: "Overzicht",
       reset: "Indeling herstellen",
@@ -545,6 +560,7 @@ details{break-inside:avoid}
     var label;
     if (!confidence || confidence === "confirmed") return null;
     if (confidence === "inferred") label = t("inferred");
+    else if (confidence === "documented") label = t("documented");
     else if (confidence === "unknown") label = t("unknown");
     else if (confidence === "assumption") label = t("assumption");
     else if (confidence === "user_statement") label = t("userStatement");
@@ -666,7 +682,8 @@ details{break-inside:avoid}
       box.appendChild(head);
       range = t("lines") + " " + (ev.line_start == null ? "" : ev.line_start) + "–" + (ev.line_end == null ? "" : ev.line_end);
       box.appendChild(document.createTextNode("\n" + range + "\n" + (ev.text || "")));
-      if (ev.flagged) box.appendChild(document.createTextNode("\n" + t("flaggedMark")));
+      if (ev.withheld) box.appendChild(document.createTextNode("\n" + t("withheld")));
+      else if (ev.flagged) box.appendChild(document.createTextNode("\n" + t("flaggedMark")));
       target.appendChild(box);
     }
   }
@@ -728,7 +745,7 @@ function openPanel(title, detail, ids, confidence) {
   }
 
   function footerText() {
-    var ver = meta.version || "0.1.0";
+    var ver = meta.version || "0.2.0";
     var round = meta.round == null ? "" : String(meta.round);
     var when = meta.generated_at || "";
     if (nl) {
@@ -980,8 +997,16 @@ function openNode(n) {
     else if (sec.type === "coverage") section.appendChild(renderCoverage(sec));
     else if (sec.type === "decisions") section.appendChild(renderDecisions(sec));
     else if (sec.type === "risks") section.appendChild(renderRisks(sec));
+    else if (sec.type === "map") section.appendChild(renderMap(sec));
+    else if (sec.type === "start") section.appendChild(renderStart(sec));
     else if (sec.type === "quiz") section.appendChild(renderQuiz(sec));
     return section;
+  }
+
+  function kindName() {
+    if (explain.kind === "idea") return t("idea");
+    if (explain.kind === "codebase") return t("codebase");
+    return t("planSpec");
   }
 
   function sectionDetail(sec) {
@@ -1170,6 +1195,69 @@ function openNode(n) {
       grid.appendChild(card);
     }
     return grid;
+  }
+
+  function renderMap(sec) {
+    var box = el("div", {"class": "cov map"});
+    var table = el("table");
+    var thead = el("thead");
+    var hr = el("tr");
+    var tbody = el("tbody");
+    var entries = arr(sec.entries);
+    var i, entry, tr, td0, td1, role;
+    hr.appendChild(el("th", {}, t("path")));
+    hr.appendChild(el("th", {}, t("role")));
+    thead.appendChild(hr);
+    table.appendChild(thead);
+    for (i = 0; i < entries.length; i++) {
+      entry = entries[i] || {};
+      tr = el("tr");
+      td0 = el("td");
+      td0.appendChild(el("code", {}, entry.path || ""));
+      tr.appendChild(td0);
+      td1 = el("td");
+      role = el("span");
+      bindText(role, entry.role);
+      td1.appendChild(role);
+      rowAppend(td1, evidenceRow(entry.evidence, entry.confidence, {
+        title: entry.path || "",
+        detail: entry.role,
+        confidence: entry.confidence
+      }));
+      tr.appendChild(td1);
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    box.appendChild(table);
+    return box;
+  }
+
+  function renderStart(sec) {
+    var list = el("ol", {"class": "steps"});
+    var steps = arr(sec.steps);
+    var i, step, li, h4, p, pre;
+    for (i = 0; i < steps.length; i++) {
+      step = steps[i] || {};
+      li = el("li");
+      h4 = el("h4");
+      staticWrap(h4, step.title || "");
+      li.appendChild(h4);
+      p = el("p");
+      bindText(p, step.text);
+      li.appendChild(p);
+      if (typeof step.command === "string" && step.command) {
+        pre = el("pre");
+        pre.appendChild(el("code", {}, step.command));
+        li.appendChild(pre);
+      }
+      rowAppend(li, evidenceRow(step.evidence, step.confidence, {
+        title: step.title || "",
+        detail: step.text,
+        confidence: step.confidence
+      }));
+      list.appendChild(li);
+    }
+    return list;
   }
 
   function renderRisks(sec) {
@@ -1551,7 +1639,7 @@ function openNode(n) {
       if (globalThis.mermaid) renderMermaid();
     }
     row.appendChild(el("b", {}, "paseo-explain"));
-    row.appendChild(el("span", {"class": "badge"}, explain.kind === "idea" ? t("idea") : t("planSpec")));
+    row.appendChild(el("span", {"class": "badge"}, kindName()));
     var levelsWrap = el("span", {"class": "levels"});
     for (i = 1; i <= 5; i++) {
       (function (n) {
@@ -1590,7 +1678,7 @@ function openNode(n) {
     row.appendChild(themeBtn);
     top.appendChild(row);
     top.appendChild(nav);
-    kicker.appendChild(document.createTextNode(t("explanation") + " · " + (explain.kind === "idea" ? t("idea") : t("planSpec"))));
+    kicker.appendChild(document.createTextNode(t("explanation") + " · " + kindName()));
     h1.appendChild(document.createTextNode(explain.title || ""));
     wrapGlossary(h1);
     bindText(lead, explain.lead && explain.lead.text);
@@ -1618,6 +1706,8 @@ function openNode(n) {
     }
     main.appendChild(facts);
     banner.appendChild(el("p", {}, factText()));
+    if (meta.depth === "docs") banner.appendChild(el("p", {}, t("depthDocs")));
+    else if (meta.depth === "code") banner.appendChild(el("p", {}, fill(t("depthCode"), {n: meta.code_excerpts || 0})));
     skipped = meta.skipped || {};
     if (skipped.fact_check) banner.appendChild(el("p", {}, fill(t("skip"), {reason: skipped.fact_check})));
     if (meta.mode === "deep" && meta.reader_grade && meta.reader_grade.total != null) {

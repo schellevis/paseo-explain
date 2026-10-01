@@ -1,8 +1,8 @@
 ---
 name: paseo-explain
-description: Use when the user wants a plan, a spec, a plan+spec pair, or an idea explained clearly and interactively — an overview diagram, a walkthrough, what changes, decisions, risks, coverage — at a reading level the reader chooses, shown as a page inside Paseo. Also used by paseo-autopilot after its spec or plan phase. Triggers include "explain this plan", "explain this spec", "leg dit uit", "leg dit plan uit", "maak dit begrijpelijk", "visualise this plan", "explain like I'm new", "explain to a non-technical reader".
+description: Use when the user wants a plan, a spec, a plan+spec pair, an idea, or a whole codebase explained clearly and interactively — an overview diagram, a walkthrough, what changes, decisions, risks, coverage — at a reading level the reader chooses, shown as a page inside Paseo. Also used by paseo-autopilot after its spec or plan phase. Triggers include "explain this plan", "explain this spec", "leg dit uit", "leg dit plan uit", "maak dit begrijpelijk", "visualise this plan", "explain like I'm new", "explain to a non-technical reader", "explain this codebase", "explain this repo", "leg deze repo uit", "leg deze codebase uit".
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   compatibility: "Requires Paseo agent tools (or the paseo CLI) and Python 3.10+. A second model family is recommended for the fact-checker. Paseo Desktop shows the page in a browser tab; other clients get a URL."
 ---
 
@@ -15,7 +15,7 @@ Every claim points at evidence, every quote is verbatim, and what is not known i
 ## Invocation
 
 ```text
-/paseo-explain [--quick | --deep] [--level <1-5>] [--levels 3|5] [--lang <code>] [--unattended] [--no-delegate] [--models <json>] [--out <dir>] <file(s) | idea text | --autopilot <run-dir> --doc spec|plan>
+/paseo-explain [--quick | --deep] [--level <1-5>] [--levels 3|5] [--lang <code>] [--unattended] [--no-delegate] [--models <json>] [--out <dir>] <file(s) | idea text | --autopilot <run-dir> --doc spec|plan | --repo <dir> [--depth docs|code]>
 ```
 
 | mode | agents besides you | steps | page label when no independent check ran |
@@ -28,11 +28,13 @@ Every claim points at evidence, every quote is verbatim, and what is not known i
 
 ## Lifecycle
 
-`FRAME -> GATHER -> MODEL -> OUTLINE -> DRAFT -> VALIDATE -> [READER-TEST (deep) -> revise -> VALIDATE] -> [FACT-CHECK -> apply corrections -> VALIDATE] -> RENDER -> SHOW -> (update | done)`
+`FRAME -> GATHER -> [SURVEY (codebase)] -> MODEL -> OUTLINE -> DRAFT -> VALIDATE -> [READER-TEST (deep) -> revise -> VALIDATE] -> [FACT-CHECK -> apply corrections -> VALIDATE] -> RENDER -> SHOW -> (update | done)`
 
-**FRAME.** Infer kind, audience, reader question, scope, mode and language. Unless unattended, ask one combined intake question; use `explain.py init` and `frame` as detailed in [pipeline](references/pipeline.md). For an autopilot caller read the [integration contract](references/integration.md).
+**FRAME.** Infer kind (`plan`, `idea` or `codebase`), audience, reader question, scope, mode and language. Unless unattended, ask one combined intake question; use `explain.py init` and `frame` as detailed in [pipeline](references/pipeline.md). For an autopilot caller read the [integration contract](references/integration.md). For a repository (`init --repo <dir> [--depth docs|code]`, kind `codebase`) follow [codebase](references/codebase.md).
 
 **GATHER.** Use `explain.py ingest` to turn sources into evidence fragments and scan flags. Follow [pipeline](references/pipeline.md) and inspect flagged fragments.
+
+**SURVEY.** Codebase, depth `code`, only when `ingest` reports `survey_recommended`: run `survey-prepare` per non-fresh area, launch surveyor agents with the [surveyor prompt](references/prompts.md), ingest each with `survey-report`, then re-run `ingest --reuse --code …` with the ranges you chose. Surveys are hints, never evidence. See [codebase](references/codebase.md).
 
 **MODEL.** Build a private evidence ledger and connected concepts, following [pipeline](references/pipeline.md). Do not create a ledger file.
 
@@ -79,6 +81,8 @@ Invoke `python3 paseo-explain/scripts/explain.py <subcommand>` from the reposito
 - `frame` records audience, reader question and check questions.
 - `ingest` extracts and scans source evidence.
 - `validate` checks the explanation and records content hashes.
+- `survey-prepare` writes a surveyor request for one repository area.
+- `survey-report` validates and records a surveyor report.
 - `check-prepare` freezes a check request and its input.
 - `check-report` validates and records an agent report.
 - `apply-corrections` applies checked corrections or removals.

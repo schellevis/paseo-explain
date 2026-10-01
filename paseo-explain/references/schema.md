@@ -2,15 +2,15 @@
 
 Read this while authoring `explain.json`; the JSON schemas are documentation and `validate.py` is the runtime authority.
 
-All top-level fields are required, and unknown keys are rejected. `explain_schema` is 1; `kind` is `plan` or `idea` and matches the session; `lang` is a language code; `title` names the page; `levels` equals the session's written levels. `lead` is an evidence-bearing headline with `text`, `evidence` and `confidence`. `facts` contains short `label`/`value` pairs with the same evidence and confidence fields. `hero` contains a `caption`, canvas `height`, `zones`, `nodes`, `edges` and walkthrough `steps`. `sections` contains 3–8 typed sections. `glossary` contains `term`/`definition` entries.
+All top-level fields are required, and unknown keys are rejected. `explain_schema` is 1; `kind` is `plan`, `idea` or `codebase` and matches the session; `lang` is a language code; `title` names the page; `levels` equals the session's written levels. `lead` is an evidence-bearing headline with `text`, `evidence` and `confidence`. `facts` contains short `label`/`value` pairs with the same evidence and confidence fields. `hero` contains a `caption`, canvas `height`, `zones`, `nodes`, `edges` and walkthrough `steps`. `sections` contains 3–8 typed sections. `glossary` contains `term`/`definition` entries.
 
-A leveled text is a string shared across levels, or an object with exactly the written-level keys (`1`, `3`, `5`, or all of `1`, `2`, `3`, `4`, `5`). Never omit a written level. For plans, `confidence` is `confirmed`, `inferred` or `unknown`. Ideas also allow `user_statement` and `assumption`. `confirmed` and `user_statement` need evidence ids from `evidence.json`; evidence ids used anywhere must exist. A `quote` has an `evidence` id and verbatim `text` from that fragment.
+A leveled text is a string shared across levels, or an object with exactly the written-level keys (`1`, `3`, `5`, or all of `1`, `2`, `3`, `4`, `5`). Never omit a written level. For plans, `confidence` is `confirmed`, `inferred` or `unknown`. Ideas also allow `user_statement` and `assumption`. A codebase allows `confirmed`, `documented`, `inferred` and `unknown`: `documented` needs at least one evidence id from a `doc` source, and `confirmed` needs at least one from a `code` or `manifest` source (a `confirmed` item with only `doc` evidence is an error; use `documented`). `confirmed` and `user_statement` need evidence ids from `evidence.json`; evidence ids used anywhere must exist. A `quote` has an `evidence` id and verbatim `text` from that fragment.
 
 ## Structure
 
 A `zone` has `id`, `label`, `tone`, `x`, `y`, `w`, `h`. A hero node has `id`, `label`, optional `sub`, `tone`, optional `zone`, `x`, `y`, optional `w`, `detail`, `evidence`, `confidence`. An edge uses `from`, `to`, optional `label`, `tone`; a step uses `nodes`, `from`, `to`, `text`, `evidence`. Tone is `existing`, `new` or `external` on nodes and zones, and `existing` or `new` on edges. Node and zone ids are slugs; references must resolve.
 
-Every section has `id`, `type`, `title`, optional `subtitle`, `evidence` and `confidence`. A `prose` section adds `body`; `change` adds `now`, `next`, `unchanged` lists whose entries have `text`, `evidence`, `confidence`, optional `quote`; `diagram` adds `mermaid`, `caption`, `alt`; `coverage` adds `requirements` and `tasks`. A requirement has `id`, `text`, `tasks` ids, `test` (`yes`, `no`, `unknown`), `evidence`, `confidence`; a task has `id`, `label`, `evidence`. A `decisions` section has `items` with `status` (`chosen` or `rejected`), `title`, `why`, `evidence`, `confidence`. A `risks` section has `items` with `kind` (`risk`, `open_question`, `assumption`), `title`, `text`, `evidence`, `confidence`. A `quiz` section has `items` with `q` and `a`. Plan-only types are `change` and `coverage`.
+Every section has `id`, `type`, `title`, optional `subtitle`, `evidence` and `confidence`. A `prose` section adds `body`; `change` adds `now`, `next`, `unchanged` lists whose entries have `text`, `evidence`, `confidence`, optional `quote`; `diagram` adds `mermaid`, `caption`, `alt`; `coverage` adds `requirements` and `tasks`. A requirement has `id`, `text`, `tasks` ids, `test` (`yes`, `no`, `unknown`), `evidence`, `confidence`; a task has `id`, `label`, `evidence`. A `decisions` section has `items` with `status` (`chosen` or `rejected`), `title`, `why`, `evidence`, `confidence`. A `risks` section has `items` with `kind` (`risk`, `open_question`, `assumption`), `title`, `text`, `evidence`, `confidence`. A `quiz` section has `items` with `q` and `a`. Plan-only types are `change` and `coverage`. Codebase-only types are `map` and `start`: a `map` section has `entries` with `path`, `role`, `evidence`, `confidence`, where `path` is a listed non-excluded file of `repomap.json` or a directory prefixing one (no leading `/`, no `..` segment, unique in the section); a `start` section has `steps` with `title`, `text`, optional `command`, `evidence`, `confidence`, where a `command` must occur verbatim in the text of a fragment in that step's `evidence`. A codebase session needs `repomap.json` and an `evidence.json` whose depth equals the session depth (run `ingest`), and the explanation must not contain the local repository path or a possible secret.
 
 ## Caps
 
@@ -28,10 +28,12 @@ Every section has `id`, `type`, `title`, optional `subtitle`, `evidence` and `co
 | Coverage `requirements`, `tasks`; requirement `text` | 1–30; 1–40; 120 chars |
 | Decision, risk, quiz `items` | 1–6, 1–8, 1–4 respectively |
 | Decision `why`, risk `text`, quiz `q`/`a` | 80, 80, 40/80 words per level |
+| `map` `entries`; `path`, `role` | 1–24; 120 chars, 40 words per level |
+| `start` `steps`; `title`, `text`, `command` | 1–8; 80 chars, 60 words per level, 200 chars |
 | `glossary`; `term`, `definition`; `quote.text` | 0–20; 40/240 chars; 300 chars |
 | Complete `explain.json` | 200,000 UTF-8 bytes |
 
-Canvas coordinates use 0–1000 horizontally and 0–`height` vertically. Mermaid begins with `flowchart`, `graph`, `sequenceDiagram`, `stateDiagram-v2`, `mindmap` or `timeline`. It cannot contain `<`, `click `, `%%{`, `javascript:`, `href`, `callback` or `call ` (case-insensitive). Every `evidence` reference must resolve; `quote.text` must match verbatim after CRLF-to-LF normalization. The validator warns above two `new` hero nodes or 1800 total words at the default level.
+Canvas coordinates use 0–1000 horizontally and 0–`height` vertically. Mermaid begins with `flowchart`, `graph`, `sequenceDiagram`, `stateDiagram-v2`, `mindmap` or `timeline`. It cannot contain `<`, `click `, `%%{`, `javascript:`, `href`, `callback` or `call ` (case-insensitive). Every `evidence` reference must resolve; `quote.text` must match verbatim after CRLF-to-LF normalization. The validator warns above two `new` hero nodes or 1800 total words at the default level, and when a codebase hero node, zone or edge has tone `new` (a codebase describes what exists).
 
 ## Minimal plan example
 
@@ -80,6 +82,38 @@ Prepare an idea session with `init --kind idea --slug shelf-example --mode quick
     {"id": "purpose", "type": "prose", "title": "Purpose", "evidence": ["E1"], "confidence": "user_statement", "body": "Neighbours could share tools on a shelf."},
     {"id": "mechanism", "type": "prose", "title": "How it works", "evidence": ["E1"], "confidence": "inferred", "body": "A volunteer could check returns."},
     {"id": "question", "type": "quiz", "title": "Check yourself", "evidence": [], "confidence": "inferred", "items": [{"q": "Where are tools kept?", "a": "On a shared shelf."}]}
+  ],
+  "glossary": []
+}
+```
+
+## Minimal codebase example
+
+Prepare a codebase session with `init --repo <a copy of tests/fixtures/sample-repo> --depth docs`, `frame --audience "A newcomer" --question "What is this repository?"` and `ingest`. The manifest takes `E1`–`E7`, so the README fragments are `E9` (`§tasklist`), `E10` (`§Run`), `E11` (`§Test`) and `E12` (`§Layout`). Put this JSON in `explain.json`, then run `validate --session`.
+
+```json
+{
+  "explain_schema": 1, "kind": "codebase", "lang": "en", "title": "tasklist", "levels": [1, 3, 5],
+  "lead": {"text": "tasklist is a small command-line to-do list.", "evidence": ["E9"], "confidence": "documented"},
+  "facts": [{"label": "Files", "value": "9 files", "evidence": ["E2"], "confidence": "confirmed"}],
+  "hero": {
+    "caption": "A person runs a command; the store keeps the tasks.", "height": 300, "zones": [],
+    "nodes": [
+      {"id": "person", "label": "You", "tone": "external", "zone": null, "x": 80, "y": 100, "detail": "Types a command.", "evidence": ["E10"], "confidence": "documented"},
+      {"id": "cli", "label": "cli.py", "tone": "existing", "zone": null, "x": 400, "y": 100, "detail": "Parses the command.", "evidence": ["E12"], "confidence": "documented"}
+    ],
+    "edges": [{"from": "person", "to": "cli", "tone": "existing"}], "steps": []
+  },
+  "sections": [
+    {"id": "purpose", "type": "prose", "title": "What it is", "evidence": ["E9"], "confidence": "documented", "body": "A to-do list tool that stores tasks in a file."},
+    {"id": "parts", "type": "map", "title": "The parts", "evidence": ["E12"], "confidence": "documented", "entries": [
+      {"path": "src/tasklist/cli.py", "role": "Parses arguments and runs the commands.", "evidence": ["E12"], "confidence": "documented"},
+      {"path": "docs/", "role": "Design notes.", "evidence": ["E12"], "confidence": "documented"}
+    ]},
+    {"id": "start", "type": "start", "title": "Where to start", "evidence": ["E10"], "confidence": "documented", "steps": [
+      {"title": "Add a task", "text": "Run the add command.", "command": "python3 -m tasklist add \"Buy milk\"", "evidence": ["E10"], "confidence": "documented"},
+      {"title": "Run the tests", "text": "Use the standard test runner.", "command": "python3 -m unittest", "evidence": ["E11"], "confidence": "documented"}
+    ]}
   ],
   "glossary": []
 }

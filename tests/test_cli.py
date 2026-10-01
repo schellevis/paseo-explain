@@ -24,8 +24,8 @@ from explainlib.serve import make_server
 
 
 SUBCOMMANDS = (
-    "init", "frame", "ingest", "validate", "check-prepare", "check-report",
-    "apply-corrections", "skip", "grade", "md", "render", "serve",
+    "init", "frame", "ingest", "survey-prepare", "survey-report", "validate",
+    "check-prepare", "check-report", "apply-corrections", "skip", "grade", "md", "render", "serve",
     "show", "stop", "inject", "tab", "result", "config", "lint", "leaks",
 )
 
@@ -122,7 +122,7 @@ class CliIntegrationTests(unittest.TestCase):
 
     def test_version_help_and_usage_error(self):
         code, out, err = helpers.run_cli("--version", env=self.env)
-        self.assertEqual((code, out.strip(), err), (0, "paseo-explain 0.1.0", ""))
+        self.assertEqual((code, out.strip(), err), (0, "paseo-explain 0.2.0", ""))
         for command in SUBCOMMANDS:
             with self.subTest(command=command):
                 code, out, err = helpers.run_cli(command, "--help", env=self.env)
@@ -132,6 +132,32 @@ class CliIntegrationTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertEqual(out, "")
         self.assertIn("usage:", err)
+
+    def test_codebase_end_to_end(self):
+        import repo_helpers
+
+        target = repo_helpers.copy_fixture(self.root / "repo")
+        initialized = self.cli("init", "--repo", target, "--mode", "quick", "--levels", "3", "--lang", "en")
+        self.assertEqual(initialized["depth"], "docs")
+        session = Path(initialized["session"])
+        self.cli("frame", "--session", session, "--audience", "A newcomer", "--question", "What is this?")
+        ingested = self.cli("ingest", "--session", session)
+        self.assertTrue(ingested["ok"])
+        shutil.copyfile(helpers.FIXTURES / "codebase-explain.json", session / "explain.json")
+        self.assertTrue(self.cli("validate", "--session", session)["ok"])
+        rendered = self.cli("render", "--session", session)
+        self.assertTrue(rendered["ok"])
+        for name in ("explain.html", "explain.md", "result.json"):
+            self.assertTrue((session / name).is_file(), name)
+        code, text, err = helpers.run_cli("md", "--session", session, "--level", "1", env=self.env)
+        self.assertEqual(code, 0, err)
+        self.assertIn("Based on documentation; code not read", text)
+        self.assertIn("| Path | Role |", text)
+        result = self.cli("result", "--session", session)
+        self.assertEqual(result["kind"], "codebase")
+        self.assertIsNone(result["doc"])
+        self.assertEqual(result["version"], "0.2.0")
+        self.assertEqual(result["checks"]["validate"], "pass")
 
     def test_serve_accepts_all_interfaces_ipv4(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:

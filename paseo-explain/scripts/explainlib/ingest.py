@@ -7,7 +7,9 @@ from pathlib import Path
 
 from explainlib import EXPLAIN_SCHEMA
 from explainlib.common import ExplainError, load_session, sha256_bytes, write_json
+from explainlib import repo
 from explainlib.scan import scan_fragments
+from explainlib.secretscan import find_secrets
 
 _ATX = re.compile(r"^(#{1,4})[ \t]+(.*)$")
 _REQ = re.compile(r"^###\s+(R\d+)\.?\s+(.+?)\s*$")
@@ -100,18 +102,18 @@ def _line_end(chunk: str, line_start: int) -> int:
     return line_start + newlines
 
 
-def _split_long(text: str, line_start: int) -> list[tuple[str, int, int]]:
-    if len(text) <= 4000:
+def _split_long(text: str, line_start: int, limit: int = 4000) -> list[tuple[str, int, int]]:
+    if len(text) <= limit:
         return [(text, line_start, _line_end(text, line_start))]
     pieces = []
     remaining = text
     cursor = line_start
     while remaining:
-        if len(remaining) <= 4000:
+        if len(remaining) <= limit:
             chunk = remaining
             remaining = ""
         else:
-            window = remaining[:4000]
+            window = remaining[:limit]
             newline = window.rfind("\n")
             if newline >= 0:
                 chunk = window[: newline + 1]
@@ -373,16 +375,410 @@ def _load_entries(autopilot, doc, files, text_file):
     raise ExplainError(1, "ingest requires a source")
 
 
-def ingest(session_dir, *, autopilot=None, doc=None, files=None, text_file=None) -> dict:
-    session_dir = Path(session_dir)
+_DOC_ROOT_NAMES = ("claude.md", "agents.md", "gemini.md")
+_DOC_ROOT_PREFIXES = ("readme", "contributing", "architecture", "design", "hacking", "development")
+_AUTO_DOC_LIMIT = 20
+_CODEBASE_ONLY = "codebase ingest takes --add-doc, --code and --reuse only"
+_NOT_CODEBASE = "--add-doc, --code and --reuse are for codebase sessions"
+_CODE_RANGE = re.compile(r"^(.*):(\d+)-(\d+)$")
+_CODE_WINDOW = 120
+_CODE_MIN_FRAGMENT = 40
+_CODE_FRAGMENT_CHARS = 8000
+_CODE_FRAGMENT_LIMIT = 300
+_EVIDENCE_LIMIT = 2000000
+
+
+def _load_checked_session(session_dir: Path) -> dict:
     try:
-        load_session(session_dir)
+        return load_session(session_dir)
     except ExplainError:
         raise
     except FileNotFoundError as exc:
         raise ExplainError(1, "session.json is missing") from exc
     except json.JSONDecodeError as exc:
         raise ExplainError(1, "session.json is not valid json") from exc
+
+
+def _root_doc_rank(path: str):
+    if "/" in path:
+        return None
+    lower = path.lower()
+    if lower in _DOC_ROOT_NAMES:
+        return _DOC_ROOT_NAMES.index(lower)
+    for offset, prefix in enumerate(_DOC_ROOT_PREFIXES):
+        if lower.startswith(prefix):
+            return len(_DOC_ROOT_NAMES) + offset
+    return None
+
+
+def _real(repo_real: str, path: str) -> str:
+    return os.path.realpath(os.path.join(repo_real, path))
+
+
+def _automatic_docs(listing: dict, repo_real: str) -> list[str]:
+    root = []
+    nested = []
+    for record in listing["files"]:
+        if record["kind"] != "text":
+            continue
+        path = record["path"]
+        rank = _root_doc_rank(path)
+        if rank is not None:
+            root.append((rank, path))
+        elif path.split("/")[0] in ("docs", "doc") and "/" in path and repo.is_doc_file(record):
+            nested.append(path)
+    ordered = [path for _rank, path in sorted(root)] + sorted(nested)
+    seen = set()
+    chosen = []
+    for path in ordered:
+        real = _real(repo_real, path)
+        if real in seen:
+            continue
+        seen.add(real)
+        chosen.append(path)
+    return chosen[:_AUTO_DOC_LIMIT]
+
+
+def resolve_listed(spec: str, repo_real: str, by_path: dict) -> dict:
+    """Map a repo-relative or absolute path to its listed text record, or raise ExplainError(1)."""
+    shown = "(withheld-path)" if find_secrets(spec) else spec
+    missing = ExplainError(1, f"file not in repository listing: {shown}")
+    if "\x00" in spec or "\\" in spec or ".." in spec.split("/"):
+        raise missing
+    if os.path.isabs(spec):
+        norm = os.path.normpath(spec)
+        resolved = os.path.join(os.path.realpath(os.path.dirname(norm)), os.path.basename(norm))
+        prefix = repo_real.rstrip(os.sep) + os.sep
+        if not resolved.startswith(prefix):
+            raise missing
+        rel = resolved[len(prefix) :].replace(os.sep, "/")
+    else:
+        rel = "/".join(part for part in spec.split("/") if part not in ("", "."))
+    record = by_path.get(rel)
+    if record is None:
+        raise missing
+    if record["kind"] == "excluded":
+        raise ExplainError(1, f"file is excluded: {record['path']} ({record['reason']})")
+    if record["kind"] == "large":
+        raise ExplainError(1, f"file is too large: {record['path']}")
+    if record["kind"] == "binary":
+        raise ExplainError(1, f"file is binary: {record['path']}")
+    return record
+
+
+def _read_listed(repo_real: str, record: dict) -> tuple[bytes, str]:
+    data = _read_required(os.path.join(repo_real, record["path"]))
+    if sha256_bytes(data) != record["sha256"]:
+        raise ExplainError(1, f"file changed during ingest: {record['path']}")
+    return data, _decode(data, record["path"])
+
+
+def parse_code_spec(spec: str) -> tuple[str, int | None, int | None]:
+    """Split PATH or PATH:START-END; the range bounds against the file are checked by the caller."""
+    match = _CODE_RANGE.match(spec)
+    if match is None:
+        return spec, None, None
+    start, end = int(match.group(2)), int(match.group(3))
+    if start < 1 or start > end:
+        raise ExplainError(1, f"invalid code range: {spec}")
+    return match.group(1), start, end
+
+
+def _is_boundary(lines, i: int) -> bool:
+    line = lines[i - 1].rstrip("\r\n")
+    previous = lines[i - 2].strip()
+    return line != "" and line[0] not in " \t" and previous == ""
+
+
+def split_code(lines, start: int, end: int) -> list[tuple[int, int]]:
+    """Cut the 1-based inclusive range into fragments of at most 120 lines, preferably at top-level lines."""
+    ranges = []
+    a = start
+    while a <= end:
+        if end - a + 1 <= _CODE_WINDOW:
+            ranges.append((a, end))
+            break
+        limit = a + _CODE_WINDOW - 1
+        cut = None
+        for i in range(limit, a + _CODE_MIN_FRAGMENT - 1, -1):
+            if _is_boundary(lines, i):
+                cut = i
+                break
+        if cut is None:
+            ranges.append((a, limit))
+            a = limit + 1
+        else:
+            ranges.append((a, cut - 1))
+            a = cut
+    return ranges
+
+
+def merge_ranges(ranges) -> list[tuple[int, int]]:
+    merged = []
+    for start, end in sorted(ranges):
+        if merged and start <= merged[-1][1] + 1:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
+def _collect_code(code, repo_real: str, by_path: dict, previous=()) -> dict:
+    """Map each selected file path to its merged line ranges (a whole-file spec covers everything)."""
+    wanted = {}
+    for path, start, end in previous:
+        count = by_path[path]["lines"] or 0
+        wanted.setdefault(path, []).append((start, end, start == 1 and end == count))
+    for spec in code or []:
+        path, start, end = parse_code_spec(spec)
+        record = resolve_listed(path, repo_real, by_path)
+        count = record["lines"] or 0
+        if start is None:
+            start, end = 1, count
+        elif end > count:
+            shown = "(withheld-path)" if find_secrets(spec) else spec
+            raise ExplainError(1, f"code range out of bounds: {shown}")
+        wanted.setdefault(record["path"], []).append((start, end, start == 1 and end == count))
+    selected = {}
+    for path, items in wanted.items():
+        count = by_path[path]["lines"] or 0
+        if any(whole for _start, _end, whole in items):
+            selected[path] = [(1, count)] if count else []
+        else:
+            selected[path] = merge_ranges([(start, end) for start, end, _whole in items])
+    return selected
+
+
+def _code_fragments(path: str, source_id: str, lines, ranges, start_index: int) -> list[dict]:
+    fragments = []
+    number = start_index
+    for range_start, range_end in ranges:
+        for a, b in split_code(lines, range_start, range_end):
+            text = "".join(lines[a - 1 : b])
+            for chunk, line_start, line_end in _split_long(text, a, _CODE_FRAGMENT_CHARS):
+                fragments.append(
+                    {
+                        "id": f"E{number}",
+                        "source": source_id,
+                        "anchor": f"{path}:L{line_start}-L{line_end}",
+                        "line_start": line_start,
+                        "line_end": line_end,
+                        "text": chunk,
+                        "flagged": False,
+                        "withheld": False,
+                    }
+                )
+                number += 1
+    return fragments
+
+
+def _withheld_text(fragment: dict) -> str:
+    return (
+        "[withheld by paseo-explain: possible secret in lines "
+        f"{fragment['line_start']}-{fragment['line_end']}]\n"
+    )
+
+
+def _withhold_secrets(fragments) -> list:
+    """Replace text of fragments whose text or anchor looks like a secret; return the scan flags."""
+    flags = []
+    for fragment in fragments:
+        text_hit = bool(find_secrets(fragment["text"]))
+        anchor_hit = bool(find_secrets(fragment["anchor"]))
+        if not (text_hit or anchor_hit):
+            continue
+        if anchor_hit:
+            fragment["anchor"] = "§(withheld)"
+        fragment["withheld"] = True
+        fragment["flagged"] = True
+        fragment["text"] = _withheld_text(fragment)
+        flags.append({"evidence": fragment["id"], "pattern": "secret", "excerpt": "(withheld)"})
+    return flags
+
+
+def _previous_selection(session_dir: Path):
+    previous = repo.load_repomap(session_dir)
+    selection = previous.get("selection") if isinstance(previous, dict) else None
+    if not isinstance(selection, dict):
+        return [], []
+    docs = [item for item in selection.get("docs") or [] if isinstance(item, dict)]
+    code = [item for item in selection.get("code") or [] if isinstance(item, dict)]
+    return docs, code
+
+
+def _still_same(by_path: dict, item: dict) -> bool:
+    record = by_path.get(item.get("path"))
+    return record is not None and record["kind"] == "text" and record["sha256"] == item.get("sha256")
+
+
+def _codebase_ingest(session_dir: Path, session: dict, docs, code, reuse=False) -> dict:
+    identity = session.get("identity") if isinstance(session.get("identity"), dict) else {}
+    repo_real = identity.get("repo")
+    if not isinstance(repo_real, str) or not os.path.isdir(repo_real):
+        raise ExplainError(1, "repository directory not found")
+    depth = session.get("depth") or "docs"
+    if code and depth != "code":
+        raise ExplainError(1, "--code requires depth code")
+    listing = repo.list_repository(repo_real)
+    by_path = {record["path"]: record for record in listing["files"]}
+
+    doc_paths = _automatic_docs(listing, repo_real)
+    seen = {_real(repo_real, path) for path in doc_paths}
+    for spec in docs or []:
+        record = resolve_listed(spec, repo_real, by_path)
+        real = _real(repo_real, record["path"])
+        if real not in seen:
+            seen.add(real)
+            doc_paths.append(record["path"])
+
+    reused = 0
+    dropped = []
+    previous_code = []
+    if reuse:
+        old_docs, old_code = _previous_selection(session_dir)
+        for item in old_docs:
+            if not _still_same(by_path, item):
+                dropped.append(str(item.get("path")))
+                continue
+            real = _real(repo_real, item["path"])
+            if real not in seen:
+                seen.add(real)
+                doc_paths.append(item["path"])
+                reused += 1
+        for item in old_code:
+            start, end = item.get("start"), item.get("end")
+            shown = f"{item.get('path')}:{start}-{end}"
+            valid = isinstance(start, int) and isinstance(end, int) and 1 <= start <= end
+            if depth != "code" or not valid:
+                if depth == "code":
+                    dropped.append(shown)
+                continue
+            if not _still_same(by_path, item) or end > (by_path[item["path"]]["lines"] or 0):
+                dropped.append(shown)
+                continue
+            reused += 1
+            previous_code.append((item["path"], start, end))
+
+    selected_code = _collect_code(code, repo_real, by_path, previous_code)
+
+    manifest = repo.build_manifest(listing)
+    manifest_bytes = manifest.encode("utf-8")
+    entries = [("manifest", "(manifest)", manifest_bytes, manifest, None)]
+    selection_docs = []
+    for path in doc_paths:
+        data, text = _read_listed(repo_real, by_path[path])
+        entries.append(("doc", path, data, text, None))
+        selection_docs.append({"path": path, "sha256": sha256_bytes(data)})
+    selection_code = []
+    for path in sorted(selected_code):
+        data, text = _read_listed(repo_real, by_path[path])
+        entries.append(("code", path, data, text, selected_code[path]))
+        for start, end in selected_code[path]:
+            selection_code.append(
+                {"path": path, "start": start, "end": end, "sha256": sha256_bytes(data)}
+            )
+
+    sources = []
+    fragments = []
+    next_index = 1
+    code_count = 0
+    for number, (role, display, data, text, ranges) in enumerate(entries, start=1):
+        source = {
+            "id": f"S{number}",
+            "role": role,
+            "display": display,
+            "sha256": sha256_bytes(data),
+            "lines": _line_count(text),
+        }
+        if role == "code":
+            raw_lines = [raw for _no, _content, raw in _logical_lines(_normalize(text))]
+            produced = _code_fragments(display, source["id"], raw_lines, ranges, next_index)
+            code_count += len(produced)
+        else:
+            if _has_atx(text):
+                produced = fragment_blocks(split_blocks(text), source["id"], next_index)
+            else:
+                produced = fragment_paragraphs(text, source["id"], next_index)
+            for fragment in produced:
+                fragment["withheld"] = False
+        next_index += len(produced)
+        fragments.extend(produced)
+        sources.append(source)
+
+    if code_count > _CODE_FRAGMENT_LIMIT:
+        raise ExplainError(1, f"too many code fragments: {code_count} (limit {_CODE_FRAGMENT_LIMIT})")
+    secret_flags = _withhold_secrets(fragments)
+    scan_doc = scan_fragments(fragments)
+    for fragment in fragments:
+        if fragment["withheld"]:
+            fragment["flagged"] = True
+    scan_doc["flags"] = secret_flags + scan_doc["flags"]
+    structured = {
+        "refs_present": False,
+        "requirements": [],
+        "tasks": [],
+        "waves": [],
+        "findings": [],
+        "depth": depth,
+        "repo": dict(listing["repo"]),
+        "build_files": repo.build_files(listing),
+        "entrypoints": repo.entrypoints(listing),
+    }
+    evidence = {
+        "explain_schema": EXPLAIN_SCHEMA,
+        "sources": sources,
+        "fragments": fragments,
+        "structured": structured,
+    }
+    size = len(json.dumps(evidence, ensure_ascii=False, indent=2).encode("utf-8")) + 1
+    if size > _EVIDENCE_LIMIT:
+        raise ExplainError(1, "evidence too large")
+    areas = repo.compute_areas(listing)
+    repomap = repo.merge_repomap(
+        repo.load_repomap(session_dir), listing, areas, {"docs": selection_docs, "code": selection_code}
+    )
+    write_json(session_dir / "evidence.json", evidence)
+    write_json(session_dir / "scan.json", scan_doc)
+    repo.write_repomap(session_dir, repomap)
+
+    code_files, code_bytes = repo.code_totals(listing["files"])
+    survey = (
+        depth == "code"
+        and (code_files > 60 or code_bytes > 300000)
+        and any(area["state"] != "fresh" for area in repomap["areas"])
+    )
+    return {
+        "ok": True,
+        "sources": len(sources),
+        "fragments": len(fragments),
+        "flagged": sum(1 for fragment in fragments if fragment["flagged"]),
+        "withheld": sum(1 for fragment in fragments if fragment["withheld"]),
+        "depth": depth,
+        "files": len(listing["files"]),
+        "code_files": code_files,
+        "code_bytes": code_bytes,
+        "survey_recommended": survey,
+        "areas": [
+            {"id": area["id"], "files": area["files"], "lines": area["lines"], "state": area["state"]}
+            for area in repomap["areas"]
+        ],
+        "reused": reused,
+        "dropped": dropped,
+        "structured": {"requirements": 0, "tasks": 0, "findings": 0, "refs_present": False},
+    }
+
+
+def ingest(
+    session_dir, *, autopilot=None, doc=None, files=None, text_file=None, docs=None, code=None, reuse=False
+) -> dict:
+    session_dir = Path(session_dir)
+    session = _load_checked_session(session_dir)
+    if session.get("kind") == "codebase":
+        if autopilot is not None or doc is not None or files or text_file is not None:
+            raise ExplainError(2, _CODEBASE_ONLY)
+        return _codebase_ingest(session_dir, session, docs, code, reuse)
+    if docs or code or reuse:
+        raise ExplainError(2, _NOT_CODEBASE)
 
     loaded, paragraph_mode = _load_entries(autopilot, doc, files, text_file)
     sources = []

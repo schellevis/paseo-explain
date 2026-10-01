@@ -47,6 +47,8 @@ _COPY = {
         "skip": "Fact-check skipped: {reason}",
         "reader": "Reader test: {correct}/{total} questions answered",
         "flagged": "Contains instruction-like text in the sources; treated as data",
+        "depth_docs": "Based on documentation; code not read",
+        "depth_code": "Based on documentation and {n} code excerpts",
     },
     "nl": {
         "now": "Nu",
@@ -65,6 +67,8 @@ _COPY = {
         "skip": "Feitencheck overgeslagen: {reason}",
         "reader": "Lezerstest: {correct}/{total} vragen beantwoord",
         "flagged": "Bevat instructie-achtige tekst in de bronnen; behandeld als data",
+        "depth_docs": "Gebaseerd op documentatie; code niet gelezen",
+        "depth_code": "Gebaseerd op documentatie en {n} codefragmenten",
     },
 }
 
@@ -174,6 +178,7 @@ def _evidence_index(evidence):
             "line_end": frag.get("line_end"),
             "text": text[:800],
             "flagged": bool(frag.get("flagged")),
+            "withheld": frag.get("withheld") is True,
         }
     return index
 
@@ -241,6 +246,12 @@ def _banner_lines(meta, explain, evidence):
     else:
         line = copy["not_checked"]
     lines = [line]
+    depth = meta.get("depth")
+    if depth == "docs":
+        lines.append(copy["depth_docs"])
+    elif depth == "code":
+        count = meta.get("code_excerpts")
+        lines.append(copy["depth_code"].format(n=count if isinstance(count, int) and not isinstance(count, bool) else 0))
     skipped = meta.get("skipped") if isinstance(meta.get("skipped"), dict) else {}
     reason = skipped.get("fact_check")
     if isinstance(reason, str) and reason:
@@ -333,6 +344,41 @@ def _bullet_items(section, level, index, label_of):
     return body
 
 
+def _map_md(section, level, index):
+    rows = ["| Path | Role |", "| --- | --- |"]
+    for entry in section.get("entries") or []:
+        if not isinstance(entry, dict):
+            continue
+        path = _cell(entry.get("path") or "")
+        role = _cell(_text_at(entry.get("role"), level)) + _anchor_suffix(_ids(entry), index)
+        rows.append(f"| `{path}` | {role} |")
+    body = "\n".join(rows)
+    extra = _anchor_suffix(_ids(section), index).strip()
+    if extra:
+        body += "\n\n" + extra
+    return body
+
+
+def _start_md(section, level, index):
+    blocks = []
+    for number, step in enumerate(section.get("steps") or [], 1):
+        if not isinstance(step, dict):
+            continue
+        chunk = (
+            f"{number}. **{_inline(step.get('title') or '')}**: "
+            f"{_inline(_text_at(step.get('text'), level))}" + _anchor_suffix(_ids(step), index)
+        )
+        command = step.get("command")
+        if isinstance(command, str) and command:
+            chunk += "\n\n" + _fence("", command)
+        blocks.append(chunk)
+    body = "\n\n".join(blocks)
+    extra = _anchor_suffix(_ids(section), index).strip()
+    if extra:
+        body += ("\n\n" if body else "") + extra
+    return body
+
+
 def _quiz_md(section, level, for_reader):
     blocks = []
     for number, item in enumerate(section.get("items") or [], 1):
@@ -386,6 +432,10 @@ def _section_md(section, number, level, index, lang, for_reader):
                 lambda item: copy.get(item.get("kind"), _inline(item.get("kind") or "")),
             )
         )
+    elif kind == "map":
+        parts.append(_map_md(section, level, index))
+    elif kind == "start":
+        parts.append(_start_md(section, level, index))
     elif kind == "quiz":
         parts.append(_quiz_md(section, level, for_reader))
     return "\n\n".join(part for part in parts if part)
@@ -495,6 +545,17 @@ def _fact_counts(session_dir, fact_check):
     return counts
 
 
+def _code_excerpts(session, evidence):
+    if session.get("kind") != "codebase" or not isinstance(evidence, dict):
+        return None
+    roles = {}
+    for src in evidence.get("sources") or []:
+        if isinstance(src, dict) and isinstance(src.get("id"), str):
+            roles[src["id"]] = src.get("role")
+    fragments = evidence.get("fragments") if isinstance(evidence.get("fragments"), list) else []
+    return sum(1 for frag in fragments if isinstance(frag, dict) and roles.get(frag.get("source")) == "code")
+
+
 def _compose_meta(session, explain, evidence, computed, session_dir):
     checks = computed.get("checks") if isinstance(computed, dict) and isinstance(computed.get("checks"), dict) else {}
     models = computed.get("models") if isinstance(computed, dict) and isinstance(computed.get("models"), dict) else {}
@@ -523,6 +584,8 @@ def _compose_meta(session, explain, evidence, computed, session_dir):
         "flagged_total": flagged_total,
         "flagged_anchors": flagged_anchors,
         "reader_grade": grade,
+        "depth": session.get("depth") if isinstance(session.get("depth"), str) else None,
+        "code_excerpts": _code_excerpts(session, evidence),
     }
 
 

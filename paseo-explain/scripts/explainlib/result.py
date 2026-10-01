@@ -182,6 +182,21 @@ def _findings(session_dir: Path, session, fact_state) -> list:
                 title = item.get("title") if isinstance(item.get("title"), str) else ""
                 _add_finding(findings, seen, "open_question", f"/sections/{section_index}/items/{item_index}", title)
     fragments = evidence.get("fragments") if isinstance(evidence, dict) and isinstance(evidence.get("fragments"), list) else []
+    displays = {}
+    for source in evidence.get("sources") if isinstance(evidence, dict) and isinstance(evidence.get("sources"), list) else []:
+        if isinstance(source, dict) and isinstance(source.get("id"), str) and isinstance(source.get("display"), str):
+            displays[source["id"]] = source["display"]
+    for fragment in fragments:
+        if isinstance(fragment, dict) and fragment.get("withheld") is True:
+            ref = fragment.get("id") if isinstance(fragment.get("id"), str) else ""
+            display = displays.get(fragment.get("source"), "")
+            _add_finding(
+                findings,
+                seen,
+                "withheld_secret",
+                ref,
+                f"possible secret withheld in {display} lines {fragment.get('line_start')}-{fragment.get('line_end')}",
+            )
     for fragment in fragments:
         if isinstance(fragment, dict) and fragment.get("flagged") is True:
             ref = fragment.get("id") if isinstance(fragment.get("id"), str) else ""
@@ -300,7 +315,7 @@ def compute_result(session_dir) -> dict:
         "explain_contract": EXPLAIN_CONTRACT,
         "version": __version__,
         "status": status,
-        "kind": session.get("kind") if session.get("kind") in ("plan", "idea") else session.get("kind"),
+        "kind": session.get("kind"),
         "doc": doc,
         "slug": session.get("slug") if isinstance(session.get("slug"), str) else "",
         "round": round_no,

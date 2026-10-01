@@ -1,6 +1,6 @@
 # paseo-explain
 
-**Status: early draft.** Paseo Explain turns a plan, specification, or idea into a source-linked explanation at a chosen reading level. It creates a page inside Paseo with an overview diagram, a step walkthrough, what changes, decisions, risks, coverage where applicable, and clickable evidence. A Markdown twin is available when the page cannot be opened.
+**Status: early draft.** Paseo Explain turns a plan, specification, idea, or whole codebase into a source-linked explanation at a chosen reading level. It creates a page inside Paseo with an overview diagram, a step walkthrough, what changes, decisions, risks, coverage where applicable, and clickable evidence. A Markdown twin is available when the page cannot be opened.
 
 ## Examples
 
@@ -8,8 +8,15 @@
 - `/paseo-explain "Neighbours could lend tools from a shared shelf"` — explore a neighbourhood tool-lending idea.
 - `/paseo-explain research-data-pipeline-spec.md --level 4` — explain a research data-pipeline specification.
 - `/paseo-explain shop-inventory-plan.md --deep` — explain a small-shop inventory plan with a reader test and fact-check.
+- `/paseo-explain --repo ./recipe-app --depth code` — explain a small recipe-app repository, quoting chosen code ranges.
 
 Use `--quick` for validation alone, standard mode for an independent fact-check, or `--deep` for a reader test followed by a fact-check. `--no-delegate` forces quick behavior. Check labels reflect the checks that actually ran; a correction applied after fact-checking is labelled as such.
+
+## Codebase mode
+
+`/paseo-explain --repo <dir> [--depth docs|code]` explains a whole repository: what it is, which parts it has, one typical flow, and where to start. Depth `docs` (default) rests on the repository's documentation and a generated file-tree manifest, and the page says "Based on documentation; code not read". Depth `code` also quotes chosen code line ranges verbatim, so behaviour claims can be confirmed against code. For larger repositories, surveyor agents read one area each; their reports are hints, never evidence. A repository map (`repomap.json`) in a stable per-repository session records file hashes and surveys, so a later run re-surveys only changed areas.
+
+Privacy: the repository is only read; its code is never run, and the only subprocess is read-only `git`. Secret files (such as `.env` and key files) are never read, and text that looks like a secret is withheld from the evidence and marked on the page. Detection is pattern-based, so false negatives remain possible: review the repository before sharing a page, and do not rely on withholding alone.
 
 ## Requirements and installation
 

@@ -36,10 +36,11 @@ SESSION_FIELDS = {
     "skipped",
     "urls",
     "tab_opened",
+    "depth",
 }
 
 SUBCOMMANDS = (
-    "init frame ingest validate check-prepare check-report apply-corrections "
+    "init frame ingest survey-prepare survey-report validate check-prepare check-report apply-corrections "
     "skip grade md render serve show stop inject tab result config lint leaks"
 ).split()
 
@@ -65,7 +66,7 @@ class CommonConfigTests(unittest.TestCase):
     def test_version(self):
         code, out, err = helpers.run_cli("--version")
         self.assertEqual(code, 0, err)
-        self.assertEqual(out.strip(), "paseo-explain 0.1.0")
+        self.assertEqual(out.strip(), "paseo-explain 0.2.0")
         self.assertEqual(err, "")
 
     def test_config_missing_defaults(self):
@@ -335,7 +336,7 @@ class CommonConfigTests(unittest.TestCase):
         self.assertNotIn("PASEO_EXPLAIN_PASEO_BIN", child)
 
     def test_subcommand_help(self):
-        self.assertEqual(len(SUBCOMMANDS), 20)
+        self.assertEqual(len(SUBCOMMANDS), 22)
         for name in SUBCOMMANDS:
             code, out, err = helpers.run_cli(name, "--help")
             self.assertEqual(code, 0, (name, out, err))

@@ -12,6 +12,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 LINT_SRC = REPO / "paseo-explain" / "scripts" / "explainlib" / "lint.py"
 LEAKS_SRC = REPO / "paseo-explain" / "scripts" / "explainlib" / "leaks.py"
+SECRETSCAN_SRC = REPO / "paseo-explain" / "scripts" / "explainlib" / "secretscan.py"
 SCRIPTS = REPO / "paseo-explain" / "scripts"
 
 CORE_RULE = (
@@ -56,7 +57,7 @@ def _skill() -> str:
         "name: paseo-explain\n"
         "description: Explain a plan.\n"
         "metadata:\n"
-        '  version: "0.1.0"\n'
+        '  version: "0.2.0"\n'
         '  compatibility: "Python 3.10+."\n'
         "---\n"
         "\n"
@@ -147,6 +148,7 @@ def build_lint_repo(root: Path, *, git: bool = True) -> None:
         ("display.md", "Display"),
         ("integration.md", "Integration"),
         ("design.md", "Design"),
+        ("codebase.md", "Codebase explanations"),
     ):
         _write(
             skill / "references" / name,
@@ -156,7 +158,7 @@ def build_lint_repo(root: Path, *, git: bool = True) -> None:
     _write(skill / "references" / "explain.schema.json", _explain_schema() + "\n")
     _write(skill / "references" / "result.schema.json", _result_schema() + "\n")
     _write(skill / "assets" / "template.html", _template())
-    _write(skill / "scripts" / "explainlib" / "__init__.py", '"""Stub package."""\n__version__ = "0.1.0"\n')
+    _write(skill / "scripts" / "explainlib" / "__init__.py", '"""Stub package."""\n__version__ = "0.2.0"\n')
     _write(
         skill / "scripts" / "explainlib" / "validate.py",
         '"""Stub validator."""\nEXPLAIN_TOP_KEYS = frozenset({"title", "sections"})\n',
@@ -209,6 +211,28 @@ def messages(report: dict) -> list[str]:
 
 
 class LintTests(unittest.TestCase):
+    def test_layout_lists_cover_codebase_mode_files(self):
+        from explainlib import lint as lint_mod
+
+        self.assertIn("paseo-explain/references/codebase.md", lint_mod.REFERENCE_FILES)
+        for rel in (
+            "paseo-explain/references/codebase.md",
+            "paseo-explain/scripts/explainlib/repo.py",
+            "paseo-explain/scripts/explainlib/secretscan.py",
+            "paseo-explain/scripts/explainlib/survey.py",
+            "tests/test_secretscan.py",
+            "tests/test_repo.py",
+            "tests/repo_helpers.py",
+            "tests/test_survey.py",
+            "tests/test_codebase.py",
+            "tests/fixtures/survey.json",
+            "tests/fixtures/codebase-explain.json",
+        ):
+            self.assertIn(rel, lint_mod.R1_FILES)
+        for path in (REPO / "tests" / "fixtures" / "sample-repo").rglob("*"):
+            if path.is_file() and "__pycache__" not in path.parts:
+                self.assertIn(path.relative_to(REPO).as_posix(), lint_mod.R1_FILES)
+
     def _repo(self, mutate=None, *, git=True):
         tmp = tempfile.TemporaryDirectory(prefix="pe-T4-att-T4-1-")
         self.addCleanup(tmp.cleanup)
@@ -250,7 +274,7 @@ class LintTests(unittest.TestCase):
     def test_metadata_version_must_equal_package_version(self):
         def mutate(root: Path) -> None:
             path = root / "paseo-explain" / "SKILL.md"
-            path.write_text(path.read_text(encoding="utf-8").replace('"0.1.0"', '"9.9.9"'), encoding="utf-8")
+            path.write_text(path.read_text(encoding="utf-8").replace('"0.2.0"', '"9.9.9"'), encoding="utf-8")
 
         report = run_lint(self._repo(mutate))
         self.assertTrue(any("metadata.version" in msg for msg in messages(report)))
@@ -493,6 +517,10 @@ class LeakTests(unittest.TestCase):
                 ("secret", r"\bghp_[A-Za-z0-9]{8,}"),
                 ("secret", r"\bAKIA[0-9A-Z]{16}\b"),
                 ("secret", r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+                ("secret", r"\bgithub_pat_[A-Za-z0-9_]{20,}"),
+                ("secret", r"\bxox[abprs]-[A-Za-z0-9-]{10,}"),
+                ("secret", r"\bAIza[0-9A-Za-z_-]{35}\b"),
+                ("secret", r"\bglpat-[A-Za-z0-9_-]{20,}"),
             ],
         )
 
@@ -634,6 +662,10 @@ class LeakTests(unittest.TestCase):
             dest = root / "paseo-explain" / "scripts" / "explainlib" / "leaks.py"
             _write(dest, LEAKS_SRC.read_text(encoding="utf-8"))
             _write(root / "paseo-explain" / "scripts" / "explainlib" / "__init__.py", '"""Stub package."""\n')
+            _write(
+                root / "paseo-explain" / "scripts" / "explainlib" / "secretscan.py",
+                SECRETSCAN_SRC.read_text(encoding="utf-8"),
+            )
             _write(root / "tracked.txt", _parts("person@", "real-domain.test") + "\n")
             _git(root, "init")
             _git(root, "add", "tracked.txt")

@@ -31,7 +31,7 @@ INDEX_CSP = "default-src 'none'; style-src 'unsafe-inline'"
 NONE_CSP = "default-src 'none'"
 
 RAW_TITLE = '<b>x</b>&"'
-HTML_BYTES = b'<meta name="paseo-explain" content="0.1.0">\n'
+HTML_BYTES = b'<meta name="paseo-explain" content="0.2.0">\n'
 MD_BYTES = b"# explain\n"
 SENTINEL_HTML = b"SENTINEL-HTML-OUTSIDE"
 SENTINEL_DIR = b"SENTINEL-DIR-OUTSIDE"

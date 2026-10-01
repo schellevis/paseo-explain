@@ -66,6 +66,8 @@ META_KEYS = {
     "flagged_total",
     "flagged_anchors",
     "reader_grade",
+    "depth",
+    "code_excerpts",
 }
 PLAN_HEADINGS = [
     "# Garden plot booking",
@@ -549,7 +551,7 @@ class RenderTests(unittest.TestCase):
         meta = restored["meta"]
         self.assertEqual(set(meta), META_KEYS)
         self.assertNotIn("status", meta)
-        self.assertEqual(meta["version"], "0.1.0")
+        self.assertEqual(meta["version"], "0.2.0")
         self.assertEqual(meta["checks"], CHECKS)
         self.assertEqual(meta["check_label"], "not_checked")
         self.assertEqual(meta["skipped"], CHECKS["skipped"])
@@ -582,7 +584,7 @@ class RenderTests(unittest.TestCase):
         sample = evidence_block["E1"]
         self.assertEqual(
             set(sample),
-            {"anchor", "source_display", "line_start", "line_end", "text", "flagged"},
+            {"anchor", "source_display", "line_start", "line_end", "text", "flagged", "withheld"},
         )
         self.assertLessEqual(len(sample["text"]), 800)
         self.assertEqual(len(double.write_notes), 2)

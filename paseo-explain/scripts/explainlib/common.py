@@ -94,11 +94,21 @@ def server_dir() -> Path:
     return explain_home() / "server"
 
 
+def _canon(name: str, empty: str) -> str:
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]", "-", name.lower())).strip("-") or empty
+
+
 def autopilot_slug(run_dir: str, doc: str) -> str:
     real = os.path.realpath(run_dir)
-    base = re.sub(r"-+", "-", re.sub(r"[^a-z0-9]", "-", os.path.basename(real).lower())).strip("-") or "run"
+    base = _canon(os.path.basename(real), "run")
     digest = hashlib.sha1(real.encode()).hexdigest()[:8]
     return f"ap-{base[:40]}-{digest}-{doc}"
+
+
+def repo_slug(repo_real: str) -> str:
+    base = _canon(os.path.basename(repo_real), "repo")
+    digest = hashlib.sha1(repo_real.encode()).hexdigest()[:8]
+    return f"cb-{base[:40]}-{digest}"
 
 
 def load_session(session_dir) -> dict:
@@ -148,7 +158,7 @@ def _clear_quick_checks(session_dir: Path) -> None:
     _remove_tree_entry(session_dir / "checks")
 
 
-def _blank_session(slug: str, kind: str, identity: dict, cfg: dict, mode, level, levels, lang, out) -> dict:
+def _blank_session(slug: str, kind: str, identity: dict, cfg: dict, mode, level, levels, lang, out, depth=None) -> dict:
     written = resolve_levels(levels, cfg)
     return {
         "explain_schema": EXPLAIN_SCHEMA,
@@ -168,6 +178,7 @@ def _blank_session(slug: str, kind: str, identity: dict, cfg: dict, mode, level,
         "skipped": {"fact_check": None, "reader_test": None},
         "urls": None,
         "tab_opened": None,
+        "depth": depth,
     }
 
 
@@ -182,15 +193,34 @@ def init_session(
     level: int | None,
     levels: int | None,
     lang: str | None,
+    repo: str | None = None,
+    depth: str | None = None,
 ) -> dict:
-    if bool(slug) == bool(autopilot):
-        raise ExplainError(2, "specify exactly one of slug and autopilot")
+    if sum(bool(item) for item in (slug, autopilot, repo)) != 1:
+        raise ExplainError(2, "specify exactly one of slug, autopilot and repo")
+    if repo:
+        if kind not in (None, "codebase"):
+            raise ExplainError(2, "--kind plan or idea cannot be combined with --repo")
+    else:
+        if kind == "codebase":
+            raise ExplainError(2, "--kind codebase requires --repo")
+        if depth is not None:
+            raise ExplainError(2, "--depth requires --repo")
+    if depth is not None and depth not in ("docs", "code"):
+        raise ExplainError(1, "depth must be docs or code")
     if mode is not None and mode not in _MODES:
         raise ExplainError(1, "mode must be quick, standard, or deep")
     if levels is not None and levels not in (3, 5):
         raise ExplainError(1, "levels must be 3 or 5")
     cfg = load_config()
-    if autopilot:
+    if repo:
+        if not os.path.isdir(repo):
+            raise ExplainError(1, "repository directory not found")
+        repo_real = os.path.realpath(repo)
+        slug = repo_slug(repo_real)
+        kind = "codebase"
+        identity = {"source": "repo", "repo": repo_real}
+    elif autopilot:
         if doc not in ("spec", "plan"):
             raise ExplainError(1, "doc must be spec or plan")
         slug = autopilot_slug(autopilot, doc)
@@ -238,14 +268,21 @@ def init_session(
         obj["slug"] = slug
         obj["kind"] = kind
         obj["identity"] = identity
+        if kind == "codebase":
+            if depth is not None:
+                obj["depth"] = depth
+            elif obj.get("depth") is None:
+                obj["depth"] = "docs"
         if switching_quick:
             obj["reader_grade"] = None
             _clear_quick_checks(session_dir)
-        for key, value in _blank_session(slug, kind, identity, cfg, None, None, None, None, None).items():
+        for key, value in _blank_session(slug, kind, identity, cfg, None, None, None, None, None, None).items():
             obj.setdefault(key, value)
         save_session(session_dir, obj)
     else:
-        obj = _blank_session(slug, kind, identity, cfg, mode, level, levels, lang, out)
+        if kind == "codebase" and depth is None:
+            depth = "docs"
+        obj = _blank_session(slug, kind, identity, cfg, mode, level, levels, lang, out, depth)
         if obj["mode"] == "quick":
             _clear_quick_checks(session_dir)
         save_session(session_dir, obj)
@@ -257,4 +294,5 @@ def init_session(
         "default_level": obj["default_level"],
         "levels": obj["levels"],
         "mode": obj["mode"],
+        "depth": obj["depth"],
     }

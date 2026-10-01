@@ -5,6 +5,8 @@ import re
 import subprocess
 from pathlib import Path
 
+from .secretscan import TOKEN_PATTERNS
+
 _ALLOWED_EMAIL_DOMAINS = ("example.com", "example.org", "example.invalid")
 _WORKSPACE_SEGMENTS = {"project-a", "example"}
 _REPO_NAME = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
@@ -22,11 +24,7 @@ PATTERNS = [
     ("workspace-path", re.compile("/work" + "space/")),
     ("uuid", re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b")),
     ("paseo-id", re.compile(r"\b(wks|prj)_[0-9a-f]{8,}\b")),
-    ("secret", re.compile(r"\bsk-[A-Za-z0-9]{8,}")),
-    ("secret", re.compile(r"\bghp_[A-Za-z0-9]{8,}")),
-    ("secret", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
-    ("secret", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
-]
+] + [("secret", pattern) for pattern in TOKEN_PATTERNS]
 
 
 def _default_repo_root() -> Path:

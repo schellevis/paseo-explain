@@ -1,0 +1,21 @@
+{
+  "explain_report": 1,
+  "kind": "survey",
+  "model": "provider/model",
+  "area": "src",
+  "files_sha256": "REPLACED-BY-THE-TEST",
+  "summary": "The src area holds the tasklist package: a command-line front end and a JSON file store.",
+  "components": [
+    {"name": "Command line", "paths": ["src/tasklist/cli.py", "src/tasklist/__main__.py"], "role": "Parses arguments and calls the store."},
+    {"name": "Store", "paths": ["src/tasklist/store.py"], "role": "Loads and saves tasks in a JSON file."}
+  ],
+  "flows": [
+    {"from": "Command line", "to": "Store", "text": "Each command calls load, add or mark_done."}
+  ],
+  "entrypoints": [
+    {"path": "src/tasklist/cli.py", "line": 19, "text": "main parses the arguments and dispatches the command."}
+  ],
+  "ranges": [
+    {"path": "src/tasklist/store.py", "start": 10, "end": 38, "why": "Shows how tasks are loaded, saved and changed."}
+  ]
+}

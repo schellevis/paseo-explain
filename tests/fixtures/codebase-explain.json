@@ -1,0 +1,120 @@
+{
+  "explain_schema": 1,
+  "kind": "codebase",
+  "lang": "en",
+  "title": "tasklist: a small to-do list tool",
+  "levels": [1, 3, 5],
+  "lead": {
+    "text": {
+      "1": "tasklist is a small program that keeps a to-do list in a file on your computer.",
+      "3": "tasklist is a command-line to-do list. It offers add, list and done, and keeps its tasks in one JSON file.",
+      "5": "tasklist is a standard-library Python CLI with add, list and done commands; cli.py parses arguments and store.py persists tasks to a single JSON file."
+    },
+    "evidence": ["E9"],
+    "confidence": "documented"
+  },
+  "facts": [
+    {"label": "Files", "value": "9 files, all text", "evidence": ["E2"], "confidence": "confirmed"},
+    {"label": "Main language", "value": "Python", "evidence": ["E3"], "confidence": "confirmed"},
+    {"label": "Storage", "value": "One JSON file", "evidence": ["E15"], "confidence": "documented"}
+  ],
+  "hero": {
+    "caption": "The command line hands a title to the store, which writes the task file.",
+    "height": 320,
+    "zones": [
+      {"id": "package", "label": "tasklist package", "tone": "existing", "x": 300, "y": 40, "w": 440, "h": 240}
+    ],
+    "nodes": [
+      {"id": "person", "label": "You", "tone": "external", "zone": null, "x": 80, "y": 160, "detail": "Types a command such as add or list.", "evidence": ["E10"], "confidence": "documented"},
+      {"id": "cli", "label": "cli.py", "sub": "commands", "tone": "existing", "zone": "package", "x": 420, "y": 100, "detail": "Parses the command and calls the store.", "evidence": ["E12", "E14"], "confidence": "documented"},
+      {"id": "store", "label": "store.py", "sub": "persistence", "tone": "existing", "zone": "package", "x": 420, "y": 220, "detail": "Loads and saves the task file.", "evidence": ["E12"], "confidence": "documented"},
+      {"id": "file", "label": "tasks.json", "tone": "external", "zone": null, "x": 860, "y": 220, "detail": "The single file that holds all tasks.", "evidence": ["E10"], "confidence": "documented"}
+    ],
+    "edges": [
+      {"from": "person", "to": "cli", "tone": "existing", "label": "command"},
+      {"from": "cli", "to": "store", "tone": "existing"},
+      {"from": "store", "to": "file", "tone": "existing", "label": "writes"}
+    ],
+    "steps": [
+      {"nodes": ["person", "cli"], "from": "person", "to": "cli", "text": "You run the add command with a title.", "evidence": ["E14"]},
+      {"nodes": ["cli", "store"], "from": "cli", "to": "store", "text": "The command parser passes the title to the store.", "evidence": ["E14"]},
+      {"nodes": ["store", "file"], "from": "store", "to": "file", "text": "The store appends a task and writes the file.", "evidence": ["E14"]}
+    ]
+  },
+  "sections": [
+    {
+      "id": "what-it-is",
+      "type": "prose",
+      "title": "What this repository is",
+      "evidence": ["E9"],
+      "confidence": "documented",
+      "body": {
+        "1": "This repository holds a small program for keeping a to-do list. You type a short command and it remembers your tasks.",
+        "3": "The repository is a to-do list command-line tool. Its README names three commands, add, list and done, and says tasks are stored in tasks.json in the current directory.",
+        "5": "The repository packages a standard-library Python CLI under src/tasklist. The README lists add, list and done, and the agent notes say commands live in cli.py and file handling in store.py."
+      }
+    },
+    {
+      "id": "parts",
+      "type": "map",
+      "title": "The parts",
+      "evidence": ["E12"],
+      "confidence": "documented",
+      "entries": [
+        {"path": "src/tasklist/cli.py", "role": "Parses arguments and dispatches the add, list and done commands.", "evidence": ["E12"], "confidence": "documented"},
+        {"path": "src/tasklist/store.py", "role": "Loads and saves the task file.", "evidence": ["E12"], "confidence": "documented"},
+        {"path": "src/tasklist/__main__.py", "role": "Runs the command parser when the package is started with python -m.", "evidence": ["E14"], "confidence": "documented"},
+        {"path": "docs/", "role": "Design notes about the flow and storage decisions.", "evidence": ["E12"], "confidence": "documented"},
+        {"path": "checks/", "role": "A check script for the store, kept outside the test folder.", "evidence": ["E4"], "confidence": "confirmed"}
+      ]
+    },
+    {
+      "id": "start-here",
+      "type": "start",
+      "title": "Where to start",
+      "evidence": ["E10", "E11"],
+      "confidence": "documented",
+      "steps": [
+        {"title": "Add a task", "text": "Run the add command with a title to create your first task.", "command": "python3 -m tasklist add \"Buy milk\"", "evidence": ["E10"], "confidence": "documented"},
+        {"title": "Run the tests", "text": "Run the standard test runner from the repository root.", "command": "python3 -m unittest", "evidence": ["E11"], "confidence": "documented"},
+        {"title": "Read the notes", "text": "The overview in the docs folder explains the flow and the storage choice.", "evidence": ["E13", "E14"], "confidence": "documented"}
+      ]
+    },
+    {
+      "id": "decisions",
+      "type": "decisions",
+      "title": "Conventions and decisions",
+      "evidence": ["E15"],
+      "confidence": "documented",
+      "items": [
+        {"status": "chosen", "title": "One JSON file", "why": "Tasks live in a single JSON file, so the data stays readable and easy to back up.", "evidence": ["E15"], "confidence": "documented"},
+        {"status": "chosen", "title": "Standard library only", "why": "The agent notes ask for the standard library only.", "evidence": ["E8"], "confidence": "documented"}
+      ]
+    },
+    {
+      "id": "unknowns",
+      "type": "risks",
+      "title": "What is not known",
+      "evidence": [],
+      "confidence": "unknown",
+      "items": [
+        {"kind": "open_question", "title": "Code was not read", "text": "This explanation rests on documentation only, so the behaviour of the commands is not confirmed against code.", "evidence": [], "confidence": "unknown"}
+      ]
+    },
+    {
+      "id": "check",
+      "type": "quiz",
+      "title": "Check yourself",
+      "evidence": [],
+      "confidence": "inferred",
+      "items": [
+        {"q": "Where are tasks stored?", "a": "In one JSON file, tasks.json, in the current directory."},
+        {"q": "Which command adds a task?", "a": "python3 -m tasklist add followed by a title."}
+      ]
+    }
+  ],
+  "glossary": [
+    {"term": "CLI", "definition": "A command-line interface: a program you control by typing commands."},
+    {"term": "JSON", "definition": "A plain-text format for storing structured data."}
+  ]
+}

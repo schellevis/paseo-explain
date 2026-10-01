@@ -240,7 +240,7 @@ class World:
         self.session = Path(json.loads(proc.stdout)["session"])
         if html:
             (self.session / "explain.html").write_text(
-                '<meta name="paseo-explain" content="0.1.0">\n',
+                '<meta name="paseo-explain" content="0.2.0">\n',
                 encoding="utf-8",
             )
         return self.session

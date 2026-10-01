@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 
 from explainlib import EXPLAIN_SCHEMA
+from explainlib.repo import load_repomap
+from explainlib.secretscan import find_secrets_in
 from explainlib.common import (
     ExplainError,
     SLUG_RE,
@@ -46,9 +48,11 @@ _NODE_DEF_RE = re.compile(r"^\s*([A-Za-z][A-Za-z0-9_]*)\s*[\[\(\{>]", re.MULTILI
 _NODE_ARROW_RE = re.compile(r"-->\s*([A-Za-z][A-Za-z0-9_]*)")
 _PLAN_CONFIDENCE = frozenset({"confirmed", "inferred", "unknown"})
 _IDEA_CONFIDENCE = _PLAN_CONFIDENCE | frozenset({"user_statement", "assumption"})
+_CODEBASE_CONFIDENCE = _PLAN_CONFIDENCE | frozenset({"documented"})
 _SECTION_KINDS = {
     "plan": frozenset({"prose", "change", "diagram", "coverage", "decisions", "risks", "quiz"}),
     "idea": frozenset({"prose", "diagram", "decisions", "risks", "quiz"}),
+    "codebase": frozenset({"prose", "diagram", "decisions", "risks", "quiz", "map", "start"}),
 }
 _MAX_EXPLAIN_BYTES = 200_000
 
@@ -133,13 +137,28 @@ def _check_leveled(value, path, levels, max_words):
     return errors
 
 
+class _Fragments(dict):
+    """Fragment id -> text, plus the source role of each id and the session kind."""
+
+    def __init__(self):
+        super().__init__()
+        self.roles = {}
+        self.codebase = False
+
+
 def _fragment_texts(evidence):
     if not isinstance(evidence, dict):
         return None
     fragments = evidence.get("fragments")
-    texts = {}
+    texts = _Fragments()
     if not isinstance(fragments, list):
         return texts
+    source_roles = {}
+    sources = evidence.get("sources")
+    if isinstance(sources, list):
+        for source in sources:
+            if isinstance(source, dict) and isinstance(source.get("id"), str):
+                source_roles[source["id"]] = source.get("role")
     for fragment in fragments:
         if not isinstance(fragment, dict):
             continue
@@ -147,6 +166,7 @@ def _fragment_texts(evidence):
         text = fragment.get("text")
         if isinstance(frag_id, str) and isinstance(text, str) and frag_id not in texts:
             texts[frag_id] = text.replace("\r\n", "\n")
+            texts.roles[frag_id] = source_roles.get(fragment.get("source"))
     return texts
 
 
@@ -164,11 +184,17 @@ def _check_evidence(value, path, known, confidence):
         error["path"] == path and "expected a list" in error["message"] for error in errors
     ):
         errors.append(_error(path, f"{confidence} requires evidence"))
+    if getattr(known, "codebase", False) and confidence in ("confirmed", "documented"):
+        roles = {known.roles.get(item) for item in value if isinstance(item, str) and item in known}
+        if confidence == "documented" and "doc" not in roles:
+            errors.append(_error(path, "documented requires doc evidence"))
+        elif confidence == "confirmed" and roles and not roles & {"code", "manifest"}:
+            errors.append(_error(path, "confirmed needs code or manifest evidence; use documented"))
     return errors
 
 
 def _check_confidence(value, path, kind):
-    allowed = _IDEA_CONFIDENCE if kind == "idea" else _PLAN_CONFIDENCE
+    allowed = {"idea": _IDEA_CONFIDENCE, "codebase": _CODEBASE_CONFIDENCE}.get(kind, _PLAN_CONFIDENCE)
     if not isinstance(value, str) or value not in allowed:
         return [_error(path, "confidence is not allowed for this kind")]
     return []
@@ -313,6 +339,17 @@ def _words_at_level(explain, level):
                     if isinstance(item.get("title"), str):
                         total += words(item["title"])
                     total = _add_words(total, item.get("text"), level)
+            elif kind == "map":
+                for item in section.get("entries") or []:
+                    if isinstance(item, dict):
+                        total = _add_words(total, item.get("role"), level)
+            elif kind == "start":
+                for item in section.get("steps") or []:
+                    if not isinstance(item, dict):
+                        continue
+                    if isinstance(item.get("title"), str):
+                        total += words(item["title"])
+                    total = _add_words(total, item.get("text"), level)
             elif kind == "quiz":
                 for item in section.get("items") or []:
                     if not isinstance(item, dict):
@@ -394,7 +431,102 @@ def _validate_change_item(item, path, kind, levels, known):
     return errors
 
 
-def _validate_section(section, path, kind, levels, known, seen_ids):
+def _map_path_ok(value, repo_files):
+    if not isinstance(value, str) or value == "" or value.startswith("/"):
+        return False
+    if ".." in value.split("/"):
+        return False
+    name = value.rstrip("/")
+    if name == "":
+        return False
+    prefix = name + "/"
+    if value.endswith("/"):
+        return any(item.startswith(prefix) for item in repo_files)
+    return name in repo_files or any(item.startswith(prefix) for item in repo_files)
+
+
+def _validate_map(section, path, levels, known, kind, repo_files):
+    errors = []
+    entries, list_errors = _as_list(section.get("entries"), _ptr(path, "entries"), 1, 24)
+    errors.extend(list_errors)
+    seen = set()
+    for index, entry in enumerate(entries or []):
+        entry_path = _ptr(_ptr(path, "entries"), index)
+        if not isinstance(entry, dict):
+            errors.append(_error(entry_path, "expected an object"))
+            continue
+        errors.extend(_check_keys(entry, entry_path, ("path", "role", "evidence", "confidence")))
+        if "path" in entry:
+            value = entry.get("path")
+            path_path = _ptr(entry_path, "path")
+            errors.extend(_check_str(value, path_path, 120, 1))
+            if isinstance(value, str) and 1 <= len(value) <= 120:
+                if repo_files is not None and not _map_path_ok(value, repo_files):
+                    errors.append(_error(path_path, "path is not a listed file or directory of the repository"))
+                elif repo_files is None and (value.startswith("/") or ".." in value.split("/")):
+                    errors.append(_error(path_path, "path is not a listed file or directory of the repository"))
+                key = value.rstrip("/")
+                if key in seen:
+                    errors.append(_error(path_path, "duplicate path"))
+                seen.add(key)
+        if "role" in entry:
+            errors.extend(_check_leveled(entry.get("role"), _ptr(entry_path, "role"), levels, 40))
+        confidence = entry.get("confidence")
+        if "confidence" in entry:
+            errors.extend(_check_confidence(confidence, _ptr(entry_path, "confidence"), kind))
+        if "evidence" in entry:
+            errors.extend(
+                _check_evidence(
+                    entry.get("evidence"),
+                    _ptr(entry_path, "evidence"),
+                    known,
+                    confidence if isinstance(confidence, str) else None,
+                )
+            )
+    return errors
+
+
+def _validate_start(section, path, levels, known, kind):
+    errors = []
+    steps, list_errors = _as_list(section.get("steps"), _ptr(path, "steps"), 1, 8)
+    errors.extend(list_errors)
+    for index, step in enumerate(steps or []):
+        step_path = _ptr(_ptr(path, "steps"), index)
+        if not isinstance(step, dict):
+            errors.append(_error(step_path, "expected an object"))
+            continue
+        errors.extend(_check_keys(step, step_path, ("title", "text", "evidence", "confidence"), ("command",)))
+        if "title" in step:
+            errors.extend(_check_str(step.get("title"), _ptr(step_path, "title"), 80, 1))
+        if "text" in step:
+            errors.extend(_check_leveled(step.get("text"), _ptr(step_path, "text"), levels, 60))
+        confidence = step.get("confidence")
+        if "confidence" in step:
+            errors.extend(_check_confidence(confidence, _ptr(step_path, "confidence"), kind))
+        evidence_ids = step.get("evidence")
+        if "evidence" in step:
+            errors.extend(
+                _check_evidence(
+                    evidence_ids,
+                    _ptr(step_path, "evidence"),
+                    known,
+                    confidence if isinstance(confidence, str) else None,
+                )
+            )
+        if "command" in step:
+            command = step.get("command")
+            command_path = _ptr(step_path, "command")
+            command_errors = _check_str(command, command_path, 200, 1)
+            errors.extend(command_errors)
+            if not command_errors:
+                needle = command.replace("\r\n", "\n")
+                ids = evidence_ids if isinstance(evidence_ids, list) else []
+                if not any(isinstance(item, str) and item in known and needle in known[item] for item in ids):
+                    errors.append(_error(command_path, "command is not verbatim in its evidence"))
+    return errors
+
+
+def _validate_section(section, path, kind, levels, known, seen_ids, repo_files=None):
     if not isinstance(section, dict):
         return [_error(path, "expected an object")]
     section_type = section.get("type")
@@ -407,6 +539,8 @@ def _validate_section(section, path, kind, levels, known, seen_ids):
         "decisions": ("items",),
         "risks": ("items",),
         "quiz": ("items",),
+        "map": ("entries",),
+        "start": ("steps",),
     }
     required = ["id", "type", "title", "evidence", "confidence"]
     optional = ["subtitle"]
@@ -592,6 +726,10 @@ def _validate_section(section, path, kind, levels, known, seen_ids):
                             item_confidence if isinstance(item_confidence, str) else None,
                         )
                     )
+    elif section_type == "map" and "entries" in section:
+        errors.extend(_validate_map(section, path, levels, known, kind, repo_files))
+    elif section_type == "start" and "steps" in section:
+        errors.extend(_validate_start(section, path, levels, known, kind))
     elif section_type == "quiz" and "items" in section:
         items, list_errors = _as_list(section.get("items"), _ptr(path, "items"), 1, 4)
         errors.extend(list_errors)
@@ -609,11 +747,60 @@ def _validate_section(section, path, kind, levels, known, seen_ids):
     return errors
 
 
-def validate_explain(explain, evidence, session, brief) -> tuple[list[dict], list[dict]]:
+def _strings_contain(obj, needle) -> bool:
+    if isinstance(obj, str):
+        return needle in obj
+    if isinstance(obj, dict):
+        return any(_strings_contain(key, needle) or _strings_contain(value, needle) for key, value in obj.items())
+    if isinstance(obj, (list, tuple)):
+        return any(_strings_contain(item, needle) for item in obj)
+    return False
+
+
+def secret_gate(explain, session) -> list[dict]:
+    """Error list for codebase sessions when explain.json holds a possible secret."""
+    if isinstance(session, dict) and session.get("kind") == "codebase" and find_secrets_in(explain):
+        return [_error("", "explain.json contains a possible secret")]
+    return []
+
+
+def _repo_paths(repomap):
+    files = repomap.get("files") if isinstance(repomap, dict) else None
+    paths = set()
+    if isinstance(files, list):
+        for record in files:
+            if isinstance(record, dict) and isinstance(record.get("path"), str) and record.get("kind") != "excluded":
+                paths.add(record["path"])
+    return paths
+
+
+def _codebase_session_errors(session, evidence, repomap):
+    errors = []
+    if repomap is None:
+        errors.append(_error("/", "repomap.json is missing; run ingest"))
+    structured = evidence.get("structured") if isinstance(evidence, dict) else None
+    depth = structured.get("depth") if isinstance(structured, dict) else None
+    if depth != session.get("depth"):
+        errors.append(_error("/", "evidence depth does not match session depth; run ingest"))
+    return errors
+
+
+def _hero_uses_new(hero) -> bool:
+    if not isinstance(hero, dict):
+        return False
+    for key in ("zones", "nodes", "edges"):
+        items = hero.get(key)
+        if isinstance(items, list) and any(isinstance(item, dict) and item.get("tone") == "new" for item in items):
+            return True
+    return False
+
+
+def validate_explain(explain, evidence, session, brief, repomap=None) -> tuple[list[dict], list[dict]]:
     """Return ``(errors, warnings)`` for an explanation document.
 
     ``brief`` is accepted for callers that already loaded ``brief.json``; brief
-    rules themselves are ``validate_brief``.
+    rules themselves are ``validate_brief``. ``repomap`` is the parsed
+    ``repomap.json``; codebase sessions require it.
     """
     del brief
     if not isinstance(explain, dict):
@@ -632,7 +819,18 @@ def validate_explain(explain, evidence, session, brief) -> tuple[list[dict], lis
     known = _fragment_texts(evidence)
     if known is None:
         errors.append(_error("", "evidence.json must be an object"))
-        known = {}
+        known = _Fragments()
+    is_codebase = session.get("kind") == "codebase"
+    known.codebase = is_codebase
+    repo_files = None
+    if is_codebase:
+        errors.extend(_codebase_session_errors(session, evidence, repomap))
+        if repomap is not None:
+            repo_files = _repo_paths(repomap)
+        identity = session.get("identity")
+        repo_root = identity.get("repo") if isinstance(identity, dict) else None
+        if isinstance(repo_root, str) and len(repo_root) > 1 and _strings_contain(explain, repo_root):
+            errors.append(_error("", "explanation contains the local repository path"))
     errors.extend(_check_keys(explain, "", tuple(sorted(EXPLAIN_TOP_KEYS))))
     levels = explain.get("levels")
     kind = explain.get("kind")
@@ -641,8 +839,8 @@ def validate_explain(explain, evidence, session, brief) -> tuple[list[dict], lis
     ):
         errors.append(_error("/explain_schema", "explain_schema must be 1"))
     if "kind" in explain:
-        if kind not in ("plan", "idea"):
-            errors.append(_error("/kind", "kind must be plan or idea"))
+        if kind not in ("plan", "idea", "codebase"):
+            errors.append(_error("/kind", "kind must be plan, idea, or codebase"))
         elif session.get("kind") != kind:
             errors.append(_error("/kind", "kind must equal session.json.kind"))
     if "lang" in explain:
@@ -727,6 +925,7 @@ def validate_explain(explain, evidence, session, brief) -> tuple[list[dict], lis
                         levels,
                         known,
                         seen_ids,
+                        repo_files,
                     )
                 )
     if "glossary" in explain:
@@ -758,6 +957,8 @@ def validate_explain(explain, evidence, session, brief) -> tuple[list[dict], lis
                 new_nodes += 1
     if new_nodes > 2:
         warnings.append(_error("/hero/nodes", "more than 2 hero nodes have tone new"))
+    if is_codebase and _hero_uses_new(hero):
+        warnings.append(_error("/hero", "codebase hero uses tone new"))
     default_level = session.get("default_level")
     if _is_int(default_level) and _words_at_level(explain, default_level) > 1800:
         warnings.append(_error("", "total words at the default level exceed 1800"))
@@ -1013,6 +1214,11 @@ def claim_units(explain) -> list[str]:
             items = section.get("items")
             if isinstance(items, list):
                 units.extend(f"{base}/items/{item_index}" for item_index in range(len(items)))
+        elif section_type in ("map", "start"):
+            column = "entries" if section_type == "map" else "steps"
+            items = section.get(column)
+            if isinstance(items, list):
+                units.extend(f"{base}/{column}/{item_index}" for item_index in range(len(items)))
     return units
 
 
@@ -1065,6 +1271,16 @@ def claim_leaves(explain) -> list[tuple[str, str]]:
             if isinstance(items, list):
                 for item_index, item in enumerate(items):
                     _append_fields(leaves, f"{base}/items/{item_index}", item, ("title", "text"))
+        elif section_type == "map":
+            items = section.get("entries")
+            if isinstance(items, list):
+                for item_index, item in enumerate(items):
+                    _append_fields(leaves, f"{base}/entries/{item_index}", item, ("path", "role"))
+        elif section_type == "start":
+            items = section.get("steps")
+            if isinstance(items, list):
+                for item_index, item in enumerate(items):
+                    _append_fields(leaves, f"{base}/steps/{item_index}", item, ("title", "text", "command"))
     return leaves
 
 
@@ -1181,14 +1397,21 @@ def run_validate(session_dir) -> dict:
     if brief is not None:
         errors.extend(validate_brief(brief))
     if explain is not None:
-        explain_errors, explain_warnings = validate_explain(
-            explain,
-            evidence if isinstance(evidence, dict) else {},
-            session if isinstance(session, dict) else {},
-            brief if isinstance(brief, dict) else {},
-        )
-        errors.extend(explain_errors)
-        warnings.extend(explain_warnings)
+        session_dict = session if isinstance(session, dict) else {}
+        gate = secret_gate(explain, session_dict)
+        if gate:
+            errors = list(gate)
+        else:
+            repomap = load_repomap(root) if session_dict.get("kind") == "codebase" else None
+            explain_errors, explain_warnings = validate_explain(
+                explain,
+                evidence if isinstance(evidence, dict) else {},
+                session_dict,
+                brief if isinstance(brief, dict) else {},
+                repomap=repomap,
+            )
+            errors.extend(explain_errors)
+            warnings.extend(explain_warnings)
     hashes = _safe_hashes(root)
     document = {
         "ok": not errors,

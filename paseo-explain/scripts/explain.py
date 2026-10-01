@@ -60,8 +60,10 @@ def build_parser() -> argparse.ArgumentParser:
     identity = init.add_mutually_exclusive_group(required=True)
     identity.add_argument("--slug")
     identity.add_argument("--autopilot")
+    identity.add_argument("--repo")
     init.add_argument("--doc", choices=("spec", "plan"))
-    init.add_argument("--kind", choices=("plan", "idea"))
+    init.add_argument("--kind", choices=("plan", "idea", "codebase"))
+    init.add_argument("--depth", choices=("docs", "code"))
     init.add_argument("--out")
     init.add_argument("--mode", choices=("quick", "standard", "deep"))
     init.add_argument("--level", type=int)
@@ -82,6 +84,18 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--doc", choices=("spec", "plan"))
     ingest.add_argument("--file", action="append", dest="files", type=_role_path)
     ingest.add_argument("--text-file", dest="text_file")
+    ingest.add_argument("--add-doc", action="append", dest="docs")
+    ingest.add_argument("--code", action="append", dest="code")
+    ingest.add_argument("--reuse", action="store_true")
+
+    survey_prepare = sub.add_parser("survey-prepare")
+    _add_session(survey_prepare)
+    survey_prepare.add_argument("--area", required=True)
+
+    survey_report = sub.add_parser("survey-report")
+    _add_session(survey_report)
+    survey_report.add_argument("--area", required=True)
+    survey_report.add_argument("--file")
 
     validate = sub.add_parser("validate")
     _add_session(validate)
@@ -147,13 +161,26 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _ingest_library_checks(args) -> bool:
+    """True when the library reports the source rules (codebase sessions or codebase-only flags)."""
+    from explainlib.common import load_session
+
+    try:
+        kind = load_session(args.session).get("kind")
+    except Exception:
+        kind = None
+    return kind == "codebase" or bool(args.docs or args.code or args.reuse)
+
+
 def _validate_args(parser: argparse.ArgumentParser, args) -> None:
     if args.cmd == "init":
         if args.autopilot and not args.doc:
             parser.error("--autopilot requires --doc")
         if args.slug and not args.kind:
-            parser.error("--kind is required unless --autopilot is given")
+            parser.error("--kind is required with --slug")
     elif args.cmd == "ingest":
+        if _ingest_library_checks(args):
+            return
         modes = sum(bool(item) for item in (args.autopilot or args.doc, args.files, args.text_file))
         if modes != 1:
             parser.error("ingest requires exactly one of --autopilot/--doc, --file, or --text-file")
@@ -185,6 +212,8 @@ def cmd_init(args):
         level=args.level,
         levels=args.levels,
         lang=args.lang,
+        repo=args.repo,
+        depth=args.depth,
     )
 
 
@@ -210,7 +239,22 @@ def cmd_ingest(args):
         doc=args.doc,
         files=args.files,
         text_file=args.text_file,
+        docs=args.docs,
+        code=args.code,
+        reuse=args.reuse,
     )
+
+
+def cmd_survey_prepare(args):
+    from explainlib import survey
+
+    return survey.prepare(args.session, args.area)
+
+
+def cmd_survey_report(args):
+    from explainlib import survey
+
+    return survey.record(args.session, args.area, args.file)
 
 
 def cmd_validate(args):
@@ -328,6 +372,8 @@ _DISPATCH = {
     "init": cmd_init,
     "frame": cmd_frame,
     "ingest": cmd_ingest,
+    "survey-prepare": cmd_survey_prepare,
+    "survey-report": cmd_survey_report,
     "validate": cmd_validate,
     "check-prepare": cmd_check_prepare,
     "check-report": cmd_check_report,
