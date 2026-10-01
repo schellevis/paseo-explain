@@ -2,7 +2,7 @@
 name: paseo-explain
 description: Use when the user wants a plan, a spec, a plan+spec pair, an idea, or a whole codebase explained clearly and interactively — an overview diagram, a walkthrough, what changes, decisions, risks, coverage — at a reading level the reader chooses, shown as a page inside Paseo. Also used by paseo-autopilot after its spec or plan phase. Triggers include "explain this plan", "explain this spec", "leg dit uit", "leg dit plan uit", "maak dit begrijpelijk", "visualise this plan", "explain like I'm new", "explain to a non-technical reader", "explain this codebase", "explain this repo", "leg deze repo uit", "leg deze codebase uit".
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
   compatibility: "Requires Paseo agent tools (or the paseo CLI) and Python 3.10+. A second model family is recommended for the fact-checker. Paseo Desktop shows the page in a browser tab; other clients get a URL."
 ---
 

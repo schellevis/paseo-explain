@@ -121,8 +121,8 @@ class WalkModeTest(TempCase):
         docs = [r["path"] for r in files if repo.is_doc_file(r)]
         self.assertEqual(docs, ["README.md", "notes.TXT"])
         count, size = repo.code_totals(files)
-        self.assertEqual(count, 3)
-        self.assertEqual(size, len("print(1)\n") + len("{}\n") + len("all:\n"))
+        self.assertEqual(count, 2)  # data.json is data, not code
+        self.assertEqual(size, len("print(1)\n") + len("all:\n"))
         self.assertEqual(self.by_path({"files": files})["Makefile"]["lang"], "Make")
         self.assertEqual(self.by_path({"files": files})["notes.TXT"]["lang"], "Text")
 
@@ -593,6 +593,7 @@ class AreasTest(unittest.TestCase):
     def test_top_level_grouping_root_and_sorting(self):
         files = [
             rec("README.md", lines=4),
+            rec("setup.py", lines=4),
             rec("src/a.py", lines=10),
             rec("src/sub/b.py", lines=5),
             rec("Docs/x.md", lines=2),
@@ -601,7 +602,8 @@ class AreasTest(unittest.TestCase):
             rec("big/z.py", kind="large", lines=50),
         ]
         areas = repo.compute_areas(listing_of(files))
-        self.assertEqual([a["id"] for a in areas], ["big", "docs", "root", "src"])
+        # Areas hold code files only: Docs/x.md and README.md are documentation, not surveyed.
+        self.assertEqual([a["id"] for a in areas], ["big", "root", "src"])
         by = area_by_id(areas)
         self.assertEqual(by["root"]["paths"], ["(root files)"])
         self.assertEqual((by["root"]["files"], by["root"]["lines"]), (1, 4))
@@ -757,3 +759,27 @@ class RepomapTest(TempCase):
         for old in ({}, {"areas": "x"}, {"areas": [1, {"id": "src", "survey": "bad"}, {"survey": {}}]}):
             merged = repo.merge_repomap(old, listing, areas, SELECTION)
             self.assertEqual([(a["id"], a["state"]) for a in merged["areas"]], [("src", "missing")])
+
+
+class CodeClassificationTest(unittest.TestCase):
+    def test_data_files_are_not_code_areas_or_entrypoints(self):
+        files = [
+            rec("src/app.py", lines=10),
+            rec("src/cli.py", lines=5),
+            rec("data/run.log", lines=900),
+            rec("data/results.json", lines=900),
+            rec("data/table.csv", lines=900),
+            rec("lists/hosts.txt", lines=900),
+            rec("static/app.css", lines=20),
+            rec("web/index.html", lines=20),
+            rec("logs/cli.log", lines=20),
+        ]
+        listing = listing_of(files)
+        self.assertEqual([a["id"] for a in repo.compute_areas(listing)], ["src", "static", "web"])
+        self.assertEqual(repo.entrypoints(listing), ["src/app.py", "src/cli.py"])
+        count, _size = repo.code_totals(files)
+        self.assertEqual(count, 4)
+        self.assertFalse(repo.is_code_file(rec("data/results.json")))
+        self.assertTrue(repo.is_code_file(rec("big/z.py", kind="large"), kinds=("text", "large")))
+        self.assertFalse(repo.is_code_file(rec("big/z.py", kind="large")))
+

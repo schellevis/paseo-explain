@@ -354,7 +354,8 @@ class IngestDocsTests(IngestTestCase):
             },
         )
         self.assertEqual([f["path"] for f in repomap["files"]], sorted(f["path"] for f in repomap["files"]))
-        self.assertEqual([a["id"] for a in repomap["areas"]], ["checks", "docs", "root", "src"])
+        # docs/ holds documentation only, so it is not a survey area.
+        self.assertEqual([a["id"] for a in repomap["areas"]], ["checks", "root", "src"])
         self.assertEqual(
             out["areas"],
             [{"id": a["id"], "files": a["files"], "lines": a["lines"], "state": "missing"} for a in repomap["areas"]],
@@ -402,7 +403,7 @@ class IngestDocsTests(IngestTestCase):
         out = self.ingest()
         states = {a["id"]: a["state"] for a in out["areas"]}
         self.assertEqual(states["src"], "fresh")
-        self.assertEqual(states["docs"], "missing")
+        self.assertEqual(states["checks"], "missing")
         (self.repo / "src" / "tasklist" / "store.py").write_text("changed = True\n", encoding="utf-8")
         out = self.ingest()
         self.assertEqual({a["id"]: a["state"] for a in out["areas"]}["src"], "stale")
@@ -1807,7 +1808,7 @@ class CodebaseRenderTests(unittest.TestCase):
         session = self.prepare(target)
         self.render(session)
         data = self.payload(session)
-        self.assertEqual(data["meta"]["version"], "0.2.0")
+        self.assertEqual(data["meta"]["version"], "0.2.1")
         self.assertEqual(data["meta"]["depth"], "docs")
         self.assertEqual(data["meta"]["code_excerpts"], 0)
         self.assertEqual(data["explain"]["kind"], "codebase")
@@ -1878,7 +1879,7 @@ class CodebaseRenderTests(unittest.TestCase):
         result = json.loads((session / "result.json").read_text(encoding="utf-8"))
         self.assertEqual(result["kind"], "codebase")
         self.assertIsNone(result["doc"])
-        self.assertEqual(result["version"], "0.2.0")
+        self.assertEqual(result["version"], "0.2.1")
         self.assertEqual(result["explain_contract"], 1)
 
     def test_render_refuses_a_secret_in_explain_json(self):
@@ -1908,16 +1909,16 @@ class VersionTests(unittest.TestCase):
     def test_version_is_0_2_0_everywhere(self):
         from explainlib import __version__
 
-        self.assertEqual(__version__, "0.2.0")
+        self.assertEqual(__version__, "0.2.1")
         skill = (helpers.REPO / "paseo-explain" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn('  version: "0.2.0"', skill)
+        self.assertIn('  version: "0.2.1"', skill)
         schema = json.loads((helpers.REPO / "paseo-explain" / "references" / "result.schema.json").read_text(encoding="utf-8"))
-        self.assertEqual(schema["properties"]["version"]["const"], "0.2.0")
+        self.assertEqual(schema["properties"]["version"]["const"], "0.2.1")
         self.assertIn("codebase", schema["properties"]["kind"]["enum"])
         self.assertIn("withheld_secret", schema["properties"]["findings"]["items"]["properties"]["kind"]["enum"])
         template = (helpers.REPO / "paseo-explain" / "assets" / "template.html").read_text(encoding="utf-8")
-        self.assertIn('<meta name="paseo-explain" content="0.2.0">', template)
-        self.assertIn('meta.version || "0.2.0"', template)
+        self.assertIn('<meta name="paseo-explain" content="0.2.1">', template)
+        self.assertIn('meta.version || "0.2.1"', template)
         self.assertNotIn("0.1.0", template)
 
 

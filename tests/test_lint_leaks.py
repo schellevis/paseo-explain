@@ -57,7 +57,7 @@ def _skill() -> str:
         "name: paseo-explain\n"
         "description: Explain a plan.\n"
         "metadata:\n"
-        '  version: "0.2.0"\n'
+        '  version: "0.2.1"\n'
         '  compatibility: "Python 3.10+."\n'
         "---\n"
         "\n"
@@ -158,7 +158,7 @@ def build_lint_repo(root: Path, *, git: bool = True) -> None:
     _write(skill / "references" / "explain.schema.json", _explain_schema() + "\n")
     _write(skill / "references" / "result.schema.json", _result_schema() + "\n")
     _write(skill / "assets" / "template.html", _template())
-    _write(skill / "scripts" / "explainlib" / "__init__.py", '"""Stub package."""\n__version__ = "0.2.0"\n')
+    _write(skill / "scripts" / "explainlib" / "__init__.py", '"""Stub package."""\n__version__ = "0.2.1"\n')
     _write(
         skill / "scripts" / "explainlib" / "validate.py",
         '"""Stub validator."""\nEXPLAIN_TOP_KEYS = frozenset({"title", "sections"})\n',
@@ -274,7 +274,7 @@ class LintTests(unittest.TestCase):
     def test_metadata_version_must_equal_package_version(self):
         def mutate(root: Path) -> None:
             path = root / "paseo-explain" / "SKILL.md"
-            path.write_text(path.read_text(encoding="utf-8").replace('"0.2.0"', '"9.9.9"'), encoding="utf-8")
+            path.write_text(path.read_text(encoding="utf-8").replace('"0.2.1"', '"9.9.9"'), encoding="utf-8")
 
         report = run_lint(self._repo(mutate))
         self.assertTrue(any("metadata.version" in msg for msg in messages(report)))

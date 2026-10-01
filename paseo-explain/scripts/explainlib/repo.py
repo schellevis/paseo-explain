@@ -38,6 +38,8 @@ PRUNE_DIRS = frozenset(
 )
 
 DOC_EXTENSIONS = frozenset({".md", ".markdown", ".rst", ".txt", ".adoc"})
+# Data and output files: listed in the manifest, but not code (no surveys, no entrypoints).
+DATA_EXTENSIONS = frozenset({".json", ".jsonl", ".ndjson", ".csv", ".tsv", ".log", ".lock", ".svg", ".map"})
 
 LANG_BY_EXT = {
     ".py": "Python",
@@ -126,9 +128,17 @@ def is_doc_file(record: dict) -> bool:
     return record["kind"] == "text" and os.path.splitext(record["path"])[1].lower() in DOC_EXTENSIONS
 
 
+def is_code_file(record: dict, kinds=("text",)) -> bool:
+    """A file that is neither documentation nor data (by extension)."""
+    if record["kind"] not in kinds:
+        return False
+    ext = os.path.splitext(record["path"])[1].lower()
+    return ext not in DOC_EXTENSIONS and ext not in DATA_EXTENSIONS
+
+
 def code_totals(files: list) -> tuple:
-    """Return (code_files, code_bytes) over text files that are not doc files."""
-    code = [f for f in files if f["kind"] == "text" and not is_doc_file(f)]
+    """Return (code_files, code_bytes) over code files (see is_code_file)."""
+    code = [f for f in files if is_code_file(f)]
     return len(code), sum(f["size"] for f in code)
 
 
@@ -360,6 +370,8 @@ BUILD_BASENAMES = frozenset(
 )
 ENTRYPOINT_STEMS = frozenset({"main", "__main__", "app", "server", "cli", "index", "manage", "run"})
 ENTRYPOINT_DIRS = frozenset({"bin", "cmd"})
+# Style and markup files are code-like but never entrypoints.
+NON_ENTRYPOINT_EXTENSIONS = frozenset({".css", ".scss", ".sass", ".less", ".html", ".htm"})
 
 TREE_LINE_LIMIT = 300
 TREE_WIDE_FILES = 2000
@@ -385,12 +397,14 @@ def build_files(listing: dict) -> list:
 
 
 def entrypoints(listing: dict) -> list:
-    """Sorted paths of non-excluded text files that look like entrypoints by name only."""
+    """Sorted paths of code files that look like entrypoints by name only."""
     found = []
     for record in listing["files"]:
-        if record["kind"] != "text":
+        if not is_code_file(record):
             continue
         path = record["path"]
+        if os.path.splitext(path)[1].lower() in NON_ENTRYPOINT_EXTENSIONS:
+            continue
         parts = path.split("/")
         stem = parts[-1].split(".")[0]
         if stem in ENTRYPOINT_STEMS or (len(parts) > 1 and parts[-2] in ENTRYPOINT_DIRS):
@@ -493,7 +507,7 @@ def _area_groups(listing: dict) -> list:
     """Return [(area dict, [file records])] sorted by area id."""
     groups = {}
     for record in listing["files"]:
-        if record["kind"] not in ("text", "large"):
+        if not is_code_file(record, kinds=("text", "large")):
             continue
         parts = record["path"].split("/")
         groups.setdefault(parts[0] if len(parts) > 1 else None, []).append(record)
@@ -548,7 +562,7 @@ def compute_areas(listing: dict) -> list:
 
 
 def area_file_map(listing: dict) -> dict:
-    """Map area id to its file records (text and large files), sorted by path."""
+    """Map area id to its code file records (text and large), sorted by path."""
     return {area["id"]: members for area, members in _area_groups(listing)}
 
 

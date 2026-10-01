@@ -20,6 +20,8 @@ Audience “a newcomer to this repository”; question “what is this repositor
 1. Run `explain.py ingest --session S`. It lists the repository (read-only), writes the manifest as `S1`, ingests the documentation automatically (`--add-doc PATH` adds more) and writes `repomap.json` with per-file hashes and areas.
 2. Depth `docs`: read the evidence and go to MODEL.
 3. Depth `code`, `survey_recommended` false: read the manifest, choose the files and ranges yourself, then run `ingest --reuse --code PATH` or `--code PATH:START-END` (repeatable).
+Areas and the `code_files`/`code_bytes` counts cover code files only: documentation (`.md`, `.rst`, `.txt`, `.adoc`) and data or output files (`.json`, `.jsonl`, `.ndjson`, `.csv`, `.tsv`, `.log`, `.lock`, `.svg`, `.map`) appear in the manifest but are never surveyed, and entrypoint candidates also skip style and markup files.
+
 4. Depth `code`, `survey_recommended` true: run `survey-prepare --session S --area ID` for every area whose state is not `fresh`. Launch at most 6 surveyors concurrently with the [surveyor prompt](prompts.md), role key `surveyor` in `--models`. Run `survey-report --session S --area ID` for each report and archive each surveyor once its report is ingested. Read the stored surveys (`repomap.json`) as hints, then run `ingest --reuse --code …` with the ranges you chose.
 5. A later run: run `ingest --reuse` first (it keeps previous selections whose files are unchanged and lists the rest as `dropped`) and survey only the non-fresh areas.
 

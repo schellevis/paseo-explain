@@ -1,6 +1,6 @@
 """paseo-explain library package."""
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 EXPLAIN_SCHEMA = 1
 EXPLAIN_CONTRACT = 1
 REPORT_SCHEMA = 1

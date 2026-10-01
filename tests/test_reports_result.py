@@ -791,3 +791,42 @@ class ReportResultTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PromptReportFormatTests(unittest.TestCase):
+    """The report formats pasted into agent prompts match the validators."""
+
+    def _blocks(self):
+        import re
+        from pathlib import Path
+
+        text = (Path(__file__).resolve().parents[1] / "paseo-explain" / "references" / "prompts.md").read_text(encoding="utf-8")
+        section = text.split("## Report formats", 1)[1]
+        found = re.findall(r"### (\w+)\n\n```json\n(.*?)\n```", section, re.S)
+        return {name: json.loads(body) for name, body in found}
+
+    def test_every_prompt_has_a_report_format_placeholder(self):
+        from pathlib import Path
+
+        text = (Path(__file__).resolve().parents[1] / "paseo-explain" / "references" / "prompts.md").read_text(encoding="utf-8")
+        self.assertEqual(text.count("{REPORT_FORMAT}\n```"), 3)
+
+    def test_format_keys_match_validators(self):
+        from explainlib import survey
+
+        blocks = self._blocks()
+        self.assertEqual(set(blocks), {"factcheck", "reader", "survey"})
+        fc = blocks["factcheck"]
+        self.assertEqual(set(fc), {"explain_report", "kind", "model", "explain_sha256", "claims", "summary", "plan_checks"})
+        self.assertEqual(set(fc["claims"][0]), {"ref", "claim", "verdict", "evidence", "correction"})
+        self.assertEqual(set(fc["plan_checks"][0]), {"kind", "ref", "text"})
+        rd = blocks["reader"]
+        self.assertEqual(set(rd), {"explain_report", "kind", "model", "explain_sha256", "level", "answers", "undefined_terms", "hard_to_follow", "summary"})
+        self.assertEqual(set(rd["answers"][0]), {"q", "answer"})
+        self.assertEqual(set(rd["hard_to_follow"][0]), {"ref", "why"})
+        sv = blocks["survey"]
+        self.assertEqual(set(sv), set(survey._REQUIRED) | set(survey._OPTIONAL))
+        self.assertEqual(set(sv["components"][0]), set(survey._COMPONENT_KEYS))
+        self.assertEqual(set(sv["flows"][0]), set(survey._FLOW_KEYS))
+        self.assertEqual(set(sv["entrypoints"][0]), set(survey._ENTRYPOINT_KEYS))
+        self.assertEqual(set(sv["ranges"][0]), set(survey._RANGE_KEYS))

@@ -345,6 +345,15 @@ class RenderTests(unittest.TestCase):
         self.assertIn("document.write", payload)
         self.assertEqual(_undo_literal(payload), page)
 
+    def test_hero_starts_in_overview_without_dimming(self):
+        # Nothing is lit or dimmed until the reader steps through the walkthrough.
+        self.assertIn("heroBox._showOverview();", self.template)
+        self.assertNotIn("heroBox._goStep(0)", self.template)
+        self.assertIn("var stepIndex = -1;", self.template)
+        self.assertIn('else if (stepIndex === 0) showOverview();', self.template)
+        self.assertIn('stepHint: "Press Play or › to walk through the steps."', self.template)
+        self.assertIn('stepHint: "Druk op Afspelen of › om de stappen te volgen."', self.template)
+
     def test_template_placeholders_and_forbidden_strings(self):
         from explainlib import render
 
@@ -551,7 +560,7 @@ class RenderTests(unittest.TestCase):
         meta = restored["meta"]
         self.assertEqual(set(meta), META_KEYS)
         self.assertNotIn("status", meta)
-        self.assertEqual(meta["version"], "0.2.0")
+        self.assertEqual(meta["version"], "0.2.1")
         self.assertEqual(meta["checks"], CHECKS)
         self.assertEqual(meta["check_label"], "not_checked")
         self.assertEqual(meta["skipped"], CHECKS["skipped"])

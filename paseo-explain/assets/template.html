@@ -8,7 +8,7 @@ See THIRD_PARTY_LICENSES.md.
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{NONCE}}' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'">
-<meta name="paseo-explain" content="0.2.0">
+<meta name="paseo-explain" content="0.2.1">
 <title>{{TITLE}}</title>
 <style>
 :root{--bg:#0a0d12;--bg-2:#0f1419;--panel:#121821;--panel-2:#182030;--border:#1f2937;--border-2:#2a3650;--text:#e6edf7;--muted:#8492a8;--dim:#5a6679;
@@ -169,6 +169,7 @@ details{break-inside:avoid}
       reset: "Reset layout",
       prev: "Previous",
       play: "Play",
+      stepHint: "Press Play or › to walk through the steps.",
       pause: "Pause",
       next: "Next",
       now: "Now",
@@ -228,6 +229,7 @@ details{break-inside:avoid}
       reset: "Indeling herstellen",
       prev: "Vorige",
       play: "Afspelen",
+      stepHint: "Druk op Afspelen of › om de stappen te volgen.",
       pause: "Pauze",
       next: "Volgende",
       now: "Nu",
@@ -404,7 +406,7 @@ details{break-inside:avoid}
   var panelTitleText = "";
   var copyBox = null;
   var aside, panelTitle, panelDetail, panelConf, panelEv, panelEntry;
-  var stepIndex = 0;
+  var stepIndex = -1;
   var playTimer = null;
 
   function textAt(value, lv) {
@@ -745,7 +747,7 @@ function openPanel(title, detail, ids, confidence) {
   }
 
   function footerText() {
-    var ver = meta.version || "0.2.0";
+    var ver = meta.version || "0.2.1";
     var round = meta.round == null ? "" : String(meta.round);
     var when = meta.generated_at || "";
     if (nl) {
@@ -1490,6 +1492,7 @@ function openNode(n) {
       player.appendChild(button("‹", t("prev"), "", function () {
         stopPlay();
         if (stepIndex > 0) goStep(stepIndex - 1);
+        else if (stepIndex === 0) showOverview();
       }));
       var playBtn = button(t("play"), t("play"), "", function () { togglePlay(playBtn, steps); });
       player.appendChild(playBtn);
@@ -1515,7 +1518,7 @@ function openNode(n) {
       stepBox.appendChild(stepI);
       stepBox.appendChild(stepText);
       stepBox.appendChild(stepChips);
-      stepEntry = bindText(stepText, steps[0].text);
+      stepEntry = bindText(stepText, t("stepHint"));
       bar = el("i");
       var progress = el("div", {"class": "progress"});
       progress.appendChild(bar);
@@ -1547,6 +1550,22 @@ function openNode(n) {
       if (step.from && step.to) animatePacket(step.from, step.to);
       else hidePacket();
     }
+    function showOverview() {
+      var id;
+      if (!steps.length) return;
+      stepIndex = -1;
+      counter.textContent = "– / " + steps.length;
+      stepI.textContent = "";
+      stepEntry.value = t("stepHint");
+      applyOne(stepEntry, level);
+      bar.style.width = "0%";
+      svg.classList.remove("dimmed");
+      for (id in nodeMap) {
+        if (Object.prototype.hasOwnProperty.call(nodeMap, id)) nodeMap[id].g.classList.remove("lit");
+      }
+      stepChips.textContent = "";
+      hidePacket();
+    }
     function stopPlay() {
       if (playTimer) {
         clearInterval(playTimer);
@@ -1565,7 +1584,7 @@ function openNode(n) {
     }
     function togglePlay(playBtn, stepList) {
       if (playTimer) { stopPlay(); return; }
-      if (stepIndex >= stepList.length - 1) goStep(0);
+      if (stepIndex < 0 || stepIndex >= stepList.length - 1) goStep(0);
       playBtn.classList.add("on");
       playBtn.textContent = t("pause");
       setAttr(playBtn, "aria-label", t("pause"));
@@ -1576,6 +1595,7 @@ function openNode(n) {
       }, 2200);
     }
     box._goStep = goStep;
+    box._showOverview = showOverview;
     box._steps = steps;
     return box;
   }
@@ -1774,7 +1794,7 @@ function openNode(n) {
     for (i = 0; i < ids.length; i++) fitWidth(nodeMap[ids[i]]);
     drawEdges();
     applySavedLayout();
-    if (heroBox._steps && heroBox._steps.length) heroBox._goStep(0);
+    if (heroBox._steps && heroBox._steps.length) heroBox._showOverview();
   }
 
   build();
