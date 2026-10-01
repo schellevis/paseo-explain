@@ -119,7 +119,7 @@ def build_parser() -> argparse.ArgumentParser:
     serve = sub.add_parser("serve")
     serve.add_argument("--root")
     serve.add_argument("--port", type=int)
-    serve.add_argument("--host", default="127.0.0.1", choices=("127.0.0.1", "::1"))
+    serve.add_argument("--host", default="127.0.0.1")
 
     show = sub.add_parser("show")
     _add_session(show)
@@ -262,12 +262,15 @@ def cmd_render(args):
 
 
 def cmd_serve(args):
-    from explainlib.common import sessions_root
+    from explainlib.common import ExplainError, sessions_root
     from explainlib import serve as serve_mod
 
     port = args.port if args.port is not None else int(os.environ["PASEO_PORT"])
     root = args.root if args.root is not None else str(sessions_root())
-    serve_mod.serve(root, args.host, port)
+    try:
+        serve_mod.serve(root, args.host, port)
+    except ValueError as exc:
+        raise ExplainError(2, str(exc)) from exc
     return None
 
 

@@ -2,12 +2,18 @@
 
 import copy
 import json
+import os
 import shutil
+import socket
+import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import helpers
 from test_show import FAKE_BODY
@@ -126,6 +132,43 @@ class CliIntegrationTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertEqual(out, "")
         self.assertIn("usage:", err)
+
+    def test_serve_accepts_all_interfaces_ipv4(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        env = dict(os.environ, **self.env)
+        process = subprocess.Popen(
+            [sys.executable, str(helpers.SCRIPT), "serve", "--root", str(self.root),
+             "--port", str(port), "--host", "0.0.0.0"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env,
+        )
+        try:
+            deadline = time.monotonic() + 5
+            while time.monotonic() < deadline:
+                if process.poll() is not None:
+                    stdout, stderr = process.communicate(timeout=1)
+                    self.fail(f"serve exited {process.returncode}: {stdout}\n{stderr}")
+                try:
+                    with urlopen(f"http://127.0.0.1:{port}/", timeout=0.2) as response:
+                        self.assertEqual(response.status, 200)
+                    break
+                except (OSError, URLError):
+                    time.sleep(0.05)
+            else:
+                self.fail("serve did not answer HTTP 200 within five seconds")
+        finally:
+            process.terminate()
+            stdout, stderr = process.communicate(timeout=5)
+        self.assertIn(f"serving on 0.0.0.0:{port}, reachable from the network", stderr)
+
+    def test_serve_rejects_hostname_without_traceback(self):
+        code, out, err = helpers.run_cli(
+            "serve", "--root", self.root, "--port", "0", "--host", "example.com", env=self.env,
+        )
+        self.assertIn(code, (1, 2))
+        self.assertNotIn("Traceback", out + err)
+        self.assertTrue("usage:" in err or "errors" in json.loads(out))
 
     def test_plan_factcheck_corrections_end_to_end(self):
         session = self.start_session(kind="plan")
