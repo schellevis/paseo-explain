@@ -33,7 +33,7 @@ For direct serving from a remote or Docker daemon, publish port 8300 in your con
 
 Port 8300 is the recommended port for direct serving. `serve_host` chooses the bind address, `serve_port` fixes the service port, and `public_base_url` supplies the URL opened first in Desktop and returned for other devices. The read-only pages are reachable by anyone who can reach that port. The default service remains bound to loopback.
 
-Written levels are 1 Simple (B1), 2 Accessible, 3 Mixed, 4 Technical and 5 Expert. The default output writes levels 1, 3 and 5; `--levels 5` writes all five. `--level` selects the initial level. Preferences may be stored at `$XDG_CONFIG_HOME/paseo-explain/config.json`, or `~/.config/paseo-explain/config.json` when that variable is unset, with optional `reading_level`, `levels`, `theme`, and `lang` keys. The skill reads this file but never writes it.
+Written levels are 1 Simple (B1), 2 Accessible, 3 Mixed, 4 Technical and 5 Expert. The default output writes levels 1, 3 and 5; `--levels 5` writes all five. `--level` selects the initial level. Preferences may be stored at `$XDG_CONFIG_HOME/paseo-explain/config.json`, or `~/.config/paseo-explain/config.json` when that variable is unset, with optional `reading_level`, `levels`, `theme`, `lang`, `serve_host`, `serve_port`, and `public_base_url` keys. With no configured theme or saved choice, the page follows the OS theme, including later changes. The skill reads this file but never writes it.
 
 ## Autopilot integration
 
