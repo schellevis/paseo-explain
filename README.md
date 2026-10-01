@@ -25,13 +25,13 @@ One phone-access option uses the Paseo daemon's `serviceProxy.publicBaseUrl` and
 
 ### Reaching the page from other devices
 
-For a remote or Docker daemon, set these optional keys in the Paseo Explain config file:
+For direct serving from a remote or Docker daemon, publish port 8300 in your container or firewall, then set `serve_host`, `serve_port` to 8300, and `public_base_url` in the Paseo Explain config file:
 
 ```json
 {"serve_host": "0.0.0.0", "serve_port": 8300, "public_base_url": "http://my-host:8300"}
 ```
 
-`serve_host` chooses the bind address, `serve_port` fixes the service port, and `public_base_url` supplies the URL opened first in Desktop and returned for other devices. Publish the port in your own container or firewall configuration. The read-only pages are reachable by anyone who can reach that port.
+Port 8300 is the recommended port for direct serving. `serve_host` chooses the bind address, `serve_port` fixes the service port, and `public_base_url` supplies the URL opened first in Desktop and returned for other devices. The read-only pages are reachable by anyone who can reach that port. The default service remains bound to loopback.
 
 Written levels are 1 Simple (B1), 2 Accessible, 3 Mixed, 4 Technical and 5 Expert. The default output writes levels 1, 3 and 5; `--levels 5` writes all five. `--level` selects the initial level. Preferences may be stored at `$XDG_CONFIG_HOME/paseo-explain/config.json`, or `~/.config/paseo-explain/config.json` when that variable is unset, with optional `reading_level`, `levels`, `theme`, and `lang` keys. The skill reads this file but never writes it.
 

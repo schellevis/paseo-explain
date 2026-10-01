@@ -498,7 +498,8 @@ def _fact_counts(session_dir, fact_check):
 def _compose_meta(session, explain, evidence, computed, session_dir):
     checks = computed.get("checks") if isinstance(computed, dict) and isinstance(computed.get("checks"), dict) else {}
     models = computed.get("models") if isinstance(computed, dict) and isinstance(computed.get("models"), dict) else {}
-    theme = load_config()["values"].get("theme") or "dark"
+    config = load_config()
+    theme = config["values"]["theme"] if config["sources"]["theme"] == "config" else None
     grade = session.get("reader_grade")
     if not isinstance(grade, dict):
         grade = None

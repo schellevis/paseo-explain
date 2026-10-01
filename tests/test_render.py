@@ -556,7 +556,7 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(meta["models"], MODELS)
         self.assertIsNone(meta["fact_counts"])
         self.assertIsNone(meta["reader_grade"])
-        self.assertEqual(meta["theme"], "dark")
+        self.assertIsNone(meta["theme"])
         self.assertEqual(meta["lang"], "en")
         self.assertEqual(meta["default_level"], 3)
         self.assertEqual(meta["levels"], [1, 3, 5])
@@ -587,6 +587,23 @@ class RenderTests(unittest.TestCase):
         self.assertLessEqual(len(sample["text"]), 800)
         self.assertEqual(len(double.write_notes), 2)
         self.assertTrue(all(note["html"] and note["md"] for note in double.write_notes))
+
+    def test_only_valid_configured_theme_is_embedded(self):
+        from explainlib import render
+
+        with tempfile.TemporaryDirectory(prefix="pe-test-theme-") as config_home:
+            config_dir = Path(config_home) / "paseo-explain"
+            config_dir.mkdir()
+            for name, value, expected in (("light", "light", "light"), ("invalid", "blue", None)):
+                with self.subTest(name=name):
+                    session = self.clone(self.plan_session, "configured-theme-" + name)
+                    (config_dir / "config.json").write_text(
+                        json.dumps({"theme": value}) + "\n", encoding="utf-8"
+                    )
+                    with mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": config_home}), patched_result(ResultDouble()):
+                        render.render(session)
+                    page = (session / "explain.html").read_text(encoding="utf-8")
+                    self.assertEqual(json.loads(_payload(page))["meta"]["theme"], expected)
 
     def test_flagged_fragments_and_fact_counts(self):
         from explainlib import render

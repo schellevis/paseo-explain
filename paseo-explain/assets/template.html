@@ -358,7 +358,18 @@ details{break-inside:avoid}
   var fallbackLevel = written.indexOf(meta.default_level) >= 0 ? meta.default_level : written[0];
   var level = written.indexOf(storedLevel) >= 0 ? storedLevel : fallbackLevel;
   var storedTheme = storageGet("paseo-explain.theme");
-  var theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : (meta.theme === "light" ? "light" : "dark");
+  var chosenTheme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+  var configTheme = meta.theme === "light" || meta.theme === "dark" ? meta.theme : null;
+  var themeMedia = null;
+  var osTheme = "dark";
+  try {
+    if (typeof window.matchMedia === "function") {
+      themeMedia = window.matchMedia("(prefers-color-scheme: light)");
+      if (themeMedia && themeMedia.matches) osTheme = "light";
+    }
+  } catch (e) { themeMedia = null; }
+  var followOS = chosenTheme === null && configTheme === null;
+  var theme = chosenTheme || configTheme || osTheme;
 
   var leveled = [];
   var diagrams = [];
@@ -1498,6 +1509,13 @@ function openNode(n) {
       setAttr(btn, "aria-label", t("theme") + ": " + themeTarget());
       setAttr(btn, "aria-pressed", theme === "light" ? "true" : "false");
     }
+    function applyTheme(next) {
+      if (next === theme) return;
+      theme = next;
+      document.body.classList.toggle("light", theme === "light");
+      syncThemeButton(themeBtn);
+      if (globalThis.mermaid) renderMermaid();
+    }
     row.appendChild(el("b", {}, "paseo-explain"));
     row.appendChild(el("span", {"class": "badge"}, explain.kind === "idea" ? t("idea") : t("planSpec")));
     var levelsWrap = el("span", {"class": "levels"});
@@ -1521,13 +1539,20 @@ function openNode(n) {
     row.appendChild(levelsWrap);
     row.appendChild(el("span", {"class": "sp"}));
     var themeBtn = button(themeTarget(), t("theme") + ": " + themeTarget(), "tbtn", function () {
-      theme = theme === "light" ? "dark" : "light";
-      document.body.classList.toggle("light", theme === "light");
+      followOS = false;
+      applyTheme(theme === "light" ? "dark" : "light");
       storageSet("paseo-explain.theme", theme);
-      syncThemeButton(themeBtn);
-      if (globalThis.mermaid) renderMermaid();
     });
     syncThemeButton(themeBtn);
+    if (followOS && themeMedia) {
+      var onOSThemeChange = function (event) {
+        if (followOS) applyTheme(event.matches ? "light" : "dark");
+      };
+      try {
+        if (typeof themeMedia.addEventListener === "function") themeMedia.addEventListener("change", onOSThemeChange);
+        else if (typeof themeMedia.addListener === "function") themeMedia.addListener(onOSThemeChange);
+      } catch (e) {}
+    }
     row.appendChild(themeBtn);
     top.appendChild(row);
     top.appendChild(nav);

@@ -13,4 +13,4 @@ A public service URL is available when `public_base_url` is set or the daemon pr
 
 ## Reaching the page from other devices
 
-Set `serve_host` to an IP address to choose the interface, `serve_port` to a fixed port, and `public_base_url` to the address other devices can open. Publish the port in your own container or firewall configuration. The read-only pages are then reachable by anyone who can reach that port.
+For direct serving, publish port 8300 in your container or firewall, then set `serve_host` to the interface address, `serve_port` to 8300, and `public_base_url` to the address other devices can open (for example, `http://my-host:8300`). Port 8300 is the recommended port for direct serving; the default service remains bound to loopback. The read-only pages are then reachable by anyone who can reach that port.
