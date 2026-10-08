@@ -1,16 +1,16 @@
 # paseo-explain
 
-**Status: early draft.** Paseo Explain turns a plan, specification, idea, or whole codebase into a source-linked explanation at a chosen reading level. It creates a page inside Paseo with an overview diagram, a step walkthrough, what changes, decisions, risks, coverage where applicable, and clickable evidence. A Markdown twin is available when the page cannot be opened.
+**Status: early draft.** Paseo Explain turns a plan, specification, idea, or whole codebase into a source-linked explanation at a chosen reading level. It creates a page inside Paseo with an overview diagram and its optional step walkthrough, then sections that begin with one concrete example, followed by what changes, decisions, risks, coverage where applicable, and clickable evidence. Things are named in plain words rather than internal codes, and the validator warns when a page does not. A Markdown twin is available when the page cannot be opened.
 
 ## Examples
 
 - `/paseo-explain garden-booking-plan.md` — explain a community-garden booking plan.
 - `/paseo-explain "Neighbours could lend tools from a shared shelf"` — explore a neighbourhood tool-lending idea.
 - `/paseo-explain research-data-pipeline-spec.md --level 4` — explain a research data-pipeline specification.
-- `/paseo-explain shop-inventory-plan.md --deep` — explain a small-shop inventory plan with a reader test and fact-check.
+- `/paseo-explain shop-inventory-plan.md --deep` — explain a small-shop inventory plan with a reader test that includes check questions, then a fact-check.
 - `/paseo-explain --repo ./recipe-app --depth code` — explain a small recipe-app repository, quoting chosen code ranges.
 
-Use `--quick` for validation alone, standard mode for an independent fact-check, or `--deep` for a reader test followed by a fact-check. `--no-delegate` forces quick behavior. Check labels reflect the checks that actually ran; a correction applied after fact-checking is labelled as such.
+Use `--quick` for validation alone, standard mode for a reader test (undefined terms and hard-to-follow passages; check questions are optional) followed by an independent fact-check, or `--deep` for the same two agents with 3–5 check questions the reader must answer. `--no-delegate` forces quick behavior. Check labels reflect the checks that actually ran; a correction applied after fact-checking is labelled as such.
 
 ## Codebase mode
 

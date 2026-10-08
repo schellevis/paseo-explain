@@ -50,10 +50,22 @@ _PLAN_CONFIDENCE = frozenset({"confirmed", "inferred", "unknown"})
 _IDEA_CONFIDENCE = _PLAN_CONFIDENCE | frozenset({"user_statement", "assumption"})
 _CODEBASE_CONFIDENCE = _PLAN_CONFIDENCE | frozenset({"documented"})
 _SECTION_KINDS = {
-    "plan": frozenset({"prose", "change", "diagram", "coverage", "decisions", "risks", "quiz"}),
-    "idea": frozenset({"prose", "diagram", "decisions", "risks", "quiz"}),
-    "codebase": frozenset({"prose", "diagram", "decisions", "risks", "quiz", "map", "start"}),
+    "plan": frozenset({"prose", "example", "change", "diagram", "coverage", "decisions", "risks", "quiz"}),
+    "idea": frozenset({"prose", "example", "diagram", "decisions", "risks", "quiz"}),
+    "codebase": frozenset({"prose", "example", "diagram", "decisions", "risks", "quiz", "map", "start"}),
 }
+_EXAMPLE_FIELDS = ("situation", "now", "after")
+_CODE_TOKEN_STRIP = "()[]{}:,.;"
+_TERM_TOKEN_STRIP = "()[]{}\"'\u201c\u201d\u2018\u2019:,.;!?"
+_SINGLE_LETTER_RE = re.compile(r"^[A-Z]$")
+_CODE_ID_RE = re.compile(r"^[A-Z]{1,3}\d+(?:[\u2013-][A-Z]{0,3}\d+)?$")
+_FILE_NAME_RE = re.compile(
+    r"^[\w.-]+\.(py|js|ts|tsx|jsx|go|rs|java|rb|sh|php|c|h|cpp|cs|json|ya?ml|toml|sql|md)$", re.IGNORECASE
+)
+_ACRONYM_RE = re.compile(r"^[A-Z]{2,}[0-9]*s?$")
+_SHORT_CODE_RE = re.compile(r"^[A-Za-z]{1,3}\d+$")
+_TERM_TOKEN_RE = re.compile(r"`([^`]+)`|\S+")
+_CODE_LABEL_WARNING = "label starts with an internal code; lead with plain words and put the code in parentheses"
 _MAX_EXPLAIN_BYTES = 200_000
 
 
@@ -307,6 +319,9 @@ def _words_at_level(explain, level):
             kind = section.get("type")
             if kind == "prose":
                 total = _add_words(total, section.get("body"), level)
+            elif kind == "example":
+                for field in _EXAMPLE_FIELDS:
+                    total = _add_words(total, section.get(field), level)
             elif kind == "change":
                 for column in ("now", "next", "unchanged"):
                     items = section.get(column)
@@ -413,7 +428,7 @@ def _validate_change_item(item, path, kind, levels, known):
         return [_error(path, "expected an object")]
     errors = _check_keys(item, path, ("text", "evidence", "confidence"), ("quote",))
     if "text" in item:
-        errors.extend(_check_leveled(item.get("text"), _ptr(path, "text"), levels, 40))
+        errors.extend(_check_leveled(item.get("text"), _ptr(path, "text"), levels, 60))
     confidence = item.get("confidence")
     if "confidence" in item:
         errors.extend(_check_confidence(confidence, _ptr(path, "confidence"), kind))
@@ -470,7 +485,7 @@ def _validate_map(section, path, levels, known, kind, repo_files):
                     errors.append(_error(path_path, "duplicate path"))
                 seen.add(key)
         if "role" in entry:
-            errors.extend(_check_leveled(entry.get("role"), _ptr(entry_path, "role"), levels, 40))
+            errors.extend(_check_leveled(entry.get("role"), _ptr(entry_path, "role"), levels, 60))
         confidence = entry.get("confidence")
         if "confidence" in entry:
             errors.extend(_check_confidence(confidence, _ptr(entry_path, "confidence"), kind))
@@ -533,6 +548,7 @@ def _validate_section(section, path, kind, levels, known, seen_ids, repo_files=N
     allowed_types = _SECTION_KINDS.get(kind, frozenset())
     type_specific = {
         "prose": ("body",),
+        "example": _EXAMPLE_FIELDS,
         "change": ("now", "next", "unchanged"),
         "diagram": ("mermaid", "caption", "alt"),
         "coverage": ("requirements", "tasks"),
@@ -575,6 +591,10 @@ def _validate_section(section, path, kind, levels, known, seen_ids, repo_files=N
         )
     if section_type == "prose" and "body" in section:
         errors.extend(_check_leveled(section.get("body"), _ptr(path, "body"), levels, 250))
+    elif section_type == "example":
+        for field in _EXAMPLE_FIELDS:
+            if field in section:
+                errors.extend(_check_leveled(section.get(field), _ptr(path, field), levels, 60))
     elif section_type == "change":
         total = 0
         present = 0
@@ -795,6 +815,126 @@ def _hero_uses_new(hero) -> bool:
     return False
 
 
+_PLAIN_SINGLE_LETTERS = frozenset({"A", "I"})
+
+
+def _code_like_label(token) -> bool:
+    """True when a label's first token looks like an internal code, not plain words."""
+    if not isinstance(token, str):
+        return False
+    if len(token) > 2 and token.endswith("()"):
+        return True
+    token = token.strip(_CODE_TOKEN_STRIP)
+    if token == "":
+        return False
+    return bool(
+        (_SINGLE_LETTER_RE.match(token) and token not in _PLAIN_SINGLE_LETTERS)
+        or _CODE_ID_RE.match(token)
+        or "_" in token
+        or "/" in token
+        or _FILE_NAME_RE.match(token)
+    )
+
+
+def _label_code_warning(label, path):
+    if not isinstance(label, str):
+        return []
+    parts = label.split()
+    if parts and _code_like_label(parts[0]):
+        return [_error(path, _CODE_LABEL_WARNING)]
+    return []
+
+
+def _level1_texts(explain):
+    texts = []
+
+    def add(value):
+        text = _level_text(value, 1)
+        if text:
+            texts.append(text)
+
+    def each(items, *fields):
+        for item in items if isinstance(items, list) else []:
+            if isinstance(item, dict):
+                for field in fields:
+                    add(item.get(field))
+
+    lead = explain.get("lead")
+    if isinstance(lead, dict):
+        add(lead.get("text"))
+    hero = explain.get("hero")
+    if isinstance(hero, dict):
+        add(hero.get("caption"))
+        each(hero.get("nodes"), "detail")
+        each(hero.get("steps"), "text")
+    sections = explain.get("sections")
+    for section in sections if isinstance(sections, list) else []:
+        if not isinstance(section, dict):
+            continue
+        for field in ("subtitle", "body", "caption") + _EXAMPLE_FIELDS:
+            add(section.get(field))
+        if section.get("type") == "change":
+            for column in ("now", "next", "unchanged"):
+                each(section.get(column), "text")
+        each(section.get("items"), "why", "text", "q", "a")
+        each(section.get("entries"), "role")
+        each(section.get("steps"), "text")
+    return texts
+
+
+def _term_explained(candidate, terms, texts):
+    folded = candidate.casefold()
+    stem = folded[:-1] if folded.endswith("s") and len(folded) > 2 else folded
+    for term in terms:
+        term_stem = term[:-1] if term.endswith("s") and len(term) > 2 else term
+        if folded == term or stem == term or folded == term_stem or stem == term_stem:
+            return True
+        for form in {folded, stem}:
+            if re.search(r"(?<!\w)" + re.escape(form) + r"(?!\w)", term):
+                return True
+    escaped = re.escape(candidate)
+    inline = (
+        re.compile(r"(?<!\w)" + escaped + r" \("),
+        re.compile(r"\w\s+\(" + escaped + r"\)"),
+    )
+    return any(pattern.search(text) for text in texts for pattern in inline)
+
+
+def _level1_undefined_terms(explain) -> list[str]:
+    """Candidate jargon in the level 1 texts that the glossary or the sentence does not explain."""
+    levels = explain.get("levels")
+    if not isinstance(levels, list) or 1 not in levels:
+        return []
+    texts = _level1_texts(explain)
+    glossary = explain.get("glossary")
+    terms = [
+        item["term"].casefold()
+        for item in (glossary if isinstance(glossary, list) else [])
+        if isinstance(item, dict) and isinstance(item.get("term"), str)
+    ]
+    title = explain.get("title")
+    title = title.casefold() if isinstance(title, str) else ""
+    found = []
+    for text in texts:
+        for match in _TERM_TOKEN_RE.finditer(text):
+            if match.group(1) is not None:
+                candidate = match.group(1).strip()
+            else:
+                candidate = match.group(0).strip(_TERM_TOKEN_STRIP)
+                if not (
+                    _ACRONYM_RE.match(candidate) or _SHORT_CODE_RE.match(candidate) or "_" in candidate
+                ):
+                    continue
+            if candidate == "" or candidate in found:
+                continue
+            if title and re.search(r"(?<!\w)" + re.escape(candidate.casefold()) + r"(?!\w)", title):
+                continue
+            if _term_explained(candidate, terms, texts):
+                continue
+            found.append(candidate)
+    return found[:10]
+
+
 def validate_explain(explain, evidence, session, brief, repomap=None) -> tuple[list[dict], list[dict]]:
     """Return ``(errors, warnings)`` for an explanation document.
 
@@ -912,7 +1052,7 @@ def validate_explain(explain, evidence, session, brief, repomap=None) -> tuple[l
     if "hero" in explain:
         errors.extend(_validate_hero(explain.get("hero"), kind if isinstance(kind, str) else "", levels, known))
     if "sections" in explain:
-        sections, list_errors = _as_list(explain.get("sections"), "/sections", 3, 8)
+        sections, list_errors = _as_list(explain.get("sections"), "/sections", 3, 9)
         errors.extend(list_errors)
         seen_ids = set()
         if sections is not None:
@@ -959,6 +1099,33 @@ def validate_explain(explain, evidence, session, brief, repomap=None) -> tuple[l
         warnings.append(_error("/hero/nodes", "more than 2 hero nodes have tone new"))
     if is_codebase and _hero_uses_new(hero):
         warnings.append(_error("/hero", "codebase hero uses tone new"))
+    sections = explain.get("sections")
+    if isinstance(sections, list):
+        first_example = None
+        for index, section in enumerate(sections):
+            if not isinstance(section, dict):
+                continue
+            title_path = _ptr(_ptr("/sections", index), "title")
+            warnings.extend(_label_code_warning(section.get("title"), title_path))
+            if section.get("type") != "example":
+                continue
+            if first_example is None:
+                first_example = index
+            else:
+                errors.append(_error(_ptr("/sections", index), "at most one example section"))
+        if first_example is None:
+            warnings.append(_error("/sections", "no example section; add one concrete case"))
+        elif first_example != 0:
+            warnings.append(_error(_ptr("/sections", first_example), "example section should be the first section"))
+    if isinstance(hero, dict):
+        for key in ("zones", "nodes"):
+            items = hero.get(key)
+            for index, item in enumerate(items if isinstance(items, list) else []):
+                if isinstance(item, dict):
+                    warnings.extend(_label_code_warning(item.get("label"), _ptr(_ptr(f"/hero/{key}", index), "label")))
+    unexplained = _level1_undefined_terms(explain)
+    if unexplained:
+        warnings.append(_error("/glossary", "level 1 uses terms the glossary does not explain: " + ", ".join(unexplained)))
     default_level = session.get("default_level")
     if _is_int(default_level) and _words_at_level(explain, default_level) > 1800:
         warnings.append(_error("", "total words at the default level exceed 1800"))
@@ -1038,7 +1205,7 @@ def _validate_hero(hero, kind, levels, known):
                         else:
                             node_ids.add(node["id"])
                 if "label" in node:
-                    errors.extend(_check_str(node.get("label"), _ptr(node_path, "label"), 28))
+                    errors.extend(_check_str(node.get("label"), _ptr(node_path, "label"), 40))
                 if "sub" in node:
                     errors.extend(_check_str(node.get("sub"), _ptr(node_path, "sub"), 36))
                 if "tone" in node and node.get("tone") not in ("existing", "new", "external"):
@@ -1122,7 +1289,7 @@ def _validate_hero(hero, kind, levels, known):
                         if not isinstance(ref, str) or ref not in node_ids:
                             errors.append(_error(_ptr(step_path, end), "unknown node"))
                 if "text" in step:
-                    errors.extend(_check_leveled(step.get("text"), _ptr(step_path, "text"), levels, 40))
+                    errors.extend(_check_leveled(step.get("text"), _ptr(step_path, "text"), levels, 60))
                 if "evidence" in step:
                     errors.extend(_check_evidence(step.get("evidence"), _ptr(step_path, "evidence"), known, None))
     return errors
@@ -1199,7 +1366,7 @@ def claim_units(explain) -> list[str]:
             continue
         section_type = section.get("type")
         base = f"/sections/{index}"
-        if section_type in ("prose", "diagram"):
+        if section_type in ("prose", "example", "diagram"):
             units.append(base)
         elif section_type == "change":
             for column in ("now", "next", "unchanged"):
@@ -1247,6 +1414,8 @@ def claim_leaves(explain) -> list[tuple[str, str]]:
         base = f"/sections/{index}"
         if section_type == "prose":
             _append_fields(leaves, base, section, ("body",))
+        elif section_type == "example":
+            _append_fields(leaves, base, section, _EXAMPLE_FIELDS)
         elif section_type == "diagram":
             _append_fields(leaves, base, section, ("mermaid", "alt"))
         elif section_type == "change":

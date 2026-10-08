@@ -37,7 +37,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 ## Status and next steps
 
-v0.2.1 fixes the first live codebase run (report formats in agent prompts, data files no longer counted as code, overview starts without a highlighted step); v0.2.0 added the codebase mode (`init --repo`, depths `docs` and `code`, manifest, repository map, surveyors, secret withholding) to the plan+spec and idea modes of v0.1.0: ingest, validation, check requests and reports, corrections, rendering, the Markdown twin, the result contract and showing through a Paseo service.
+v0.3.0 makes explanations less abstract (example section first, plain-name and level-1 term warnings, problem-first guidance, looser caps, reader test in standard mode); v0.2.1 fixes the first live codebase run (report formats in agent prompts, data files no longer counted as code, overview starts without a highlighted step); v0.2.0 added the codebase mode (`init --repo`, depths `docs` and `code`, manifest, repository map, surveyors, secret withholding) to the plan+spec and idea modes of v0.1.0: ingest, validation, check requests and reports, corrections, rendering, the Markdown twin, the result contract and showing through a Paseo service.
 
 Tested live: `explain.py show` against the real `paseo` CLI (scratch project and workspace auto-registration, service start); the page in a Paseo Desktop tab through direct serving; the rendered fixtures in Chrome (themes including OS following, levels, Mermaid including theme re-render, flagged-content notice, coverage table). Not yet tested live: real fact-checker and reader agents following `references/prompts.md` (only fixture reports so far).
 

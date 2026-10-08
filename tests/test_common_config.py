@@ -66,7 +66,7 @@ class CommonConfigTests(unittest.TestCase):
     def test_version(self):
         code, out, err = helpers.run_cli("--version")
         self.assertEqual(code, 0, err)
-        self.assertEqual(out.strip(), "paseo-explain 0.2.1")
+        self.assertEqual(out.strip(), "paseo-explain 0.3.0")
         self.assertEqual(err, "")
 
     def test_config_missing_defaults(self):

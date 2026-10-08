@@ -27,7 +27,7 @@ Areas and the `code_files`/`code_bytes` counts cover code files only: documentat
 
 ## Outline order
 
-What it is → parts (`map` section) → one typical flow (hero steps or a diagram) → start here (`start` section: how to run and test, where things live) → conventions and decisions → risks, unknowns and contradictions between documentation and code → check yourself.
+Example (one input and what comes out of it, for instance one command and its result) → what it is → parts (`map` section) → one typical flow (hero steps or a diagram) → start here (`start` section: how to run and test, where things live) → conventions and decisions → risks, unknowns and contradictions between documentation and code → check yourself. Name hero nodes and zones in plain words with the file name in parentheses, for example `Command line (cli.py)`, never the file name alone. The example describes what exists, never a change: `situation` is what goes in, `now` what the code does with it, `after` what comes out.
 
 ## Confidence
 

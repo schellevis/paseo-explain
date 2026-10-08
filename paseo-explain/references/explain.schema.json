@@ -348,7 +348,7 @@
               },
               "label": {
                 "type": "string",
-                "maxLength": 28
+                "maxLength": 40
               },
               "sub": {
                 "type": "string",
@@ -553,7 +553,7 @@
                 ]
               },
               "text": {
-                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
                 "oneOf": [
                   {
                     "type": "string",
@@ -566,17 +566,17 @@
                       "1": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       },
                       "3": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       },
                       "5": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       }
                     },
                     "required": [
@@ -593,27 +593,27 @@
                       "1": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       },
                       "2": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       },
                       "3": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       },
                       "4": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       },
                       "5": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Non-empty text of at most 40 words."
+                        "description": "Non-empty text of at most 60 words."
                       }
                     },
                     "required": [
@@ -659,7 +659,7 @@
     "sections": {
       "type": "array",
       "minItems": 3,
-      "maxItems": 8,
+      "maxItems": 9,
       "items": {
         "oneOf": [
           {
@@ -977,7 +977,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "text": {
-                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
                       "oneOf": [
                         {
                           "type": "string",
@@ -990,17 +990,17 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -1017,27 +1017,27 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "2": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "4": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -1108,7 +1108,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "text": {
-                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
                       "oneOf": [
                         {
                           "type": "string",
@@ -1121,17 +1121,17 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -1148,27 +1148,27 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "2": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "4": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -1239,7 +1239,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "text": {
-                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
                       "oneOf": [
                         {
                           "type": "string",
@@ -1252,17 +1252,17 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -1279,27 +1279,27 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "2": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "4": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -2699,7 +2699,7 @@
                       "description": "Repository-relative POSIX path: a listed non-excluded file, or a directory (with or without trailing slash) that prefixes one. No leading slash, no .. segment. Unique within the section."
                     },
                     "role": {
-                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                      "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
                       "oneOf": [
                         {
                           "type": "string",
@@ -2712,17 +2712,17 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -2739,27 +2739,27 @@
                             "1": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "2": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "3": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "4": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             },
                             "5": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Non-empty text of at most 40 words."
+                              "description": "Non-empty text of at most 60 words."
                             }
                           },
                           "required": [
@@ -3056,6 +3056,354 @@
               "steps"
             ],
             "description": "Allowed for codebase only. A command must be verbatim in its evidence."
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "type": {
+                "const": "example"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "subtitle": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 40 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 40 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Fragment ids that exist in evidence.json."
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "documented",
+                  "inferred",
+                  "unknown",
+                  "user_statement",
+                  "assumption"
+                ],
+                "description": "idea may use user_statement and assumption; codebase may use confirmed, documented, inferred, and unknown; plan may use only confirmed, inferred, and unknown. confirmed and user_statement require a non-empty evidence list. For codebase, documented needs at least one doc evidence id and confirmed needs at least one code or manifest evidence id."
+              },
+              "situation": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "now": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              },
+              "after": {
+                "description": "A string shared by every level, or an object whose keys are exactly the written levels. Each value is at most 60 words.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "3",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "1": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "2": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "3": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "4": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      },
+                      "5": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Non-empty text of at most 60 words."
+                      }
+                    },
+                    "required": [
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5"
+                    ],
+                    "description": "Keys are exactly one allowed written-level set."
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "title",
+              "evidence",
+              "confidence",
+              "situation",
+              "now",
+              "after"
+            ],
+            "description": "Allowed for plan, idea, and codebase. At most one per document; place it first. situation, now and after each hold at most 60 words per level."
           }
         ]
       }

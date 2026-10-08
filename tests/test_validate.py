@@ -26,6 +26,11 @@ from explainlib.validate import (
     validate_mermaid,
 )
 
+NO_EXAMPLE = "no example section; add one concrete case"
+CODE_LABEL = "label starts with an internal code; lead with plain words and put the code in parentheses"
+LEVEL1_PREFIX = "level 1 uses terms the glossary does not explain: "
+SCHEMA_MD = helpers.REPO / "paseo-explain" / "references" / "schema.md"
+
 PLAN_UNITS = [
     "/lead",
     "/facts/0",
@@ -507,6 +512,320 @@ class ValidateTests(unittest.TestCase):
         errors, warnings = self._errors(explain)
         self.assertEqual(errors, [])
         self._assert_error(warnings, "/hero/nodes", "tone new")
+
+    def _example(self, evidence="E3", **fields):
+        section = {
+            "id": "case",
+            "type": "example",
+            "title": "One booking",
+            "evidence": [evidence],
+            "confidence": "inferred",
+            "situation": "A member wants a plot for the summer.",
+            "now": "The member asks the board by email and waits.",
+            "after": "The member sees free plots and books one at once.",
+        }
+        section.update(fields)
+        return section
+
+    def _with_example(self, base=None, **fields):
+        explain = copy.deepcopy(self.plan if base is None else base)
+        explain["sections"].insert(0, self._example(**fields))
+        return explain
+
+    def _messages(self, items, path):
+        return [item["message"] for item in items if item["path"] == path]
+
+    def test_example_section_valid(self):
+        errors, warnings = self._errors(self._with_example())
+        self.assertEqual(errors, [])
+        self.assertNotIn(NO_EXAMPLE, self._messages(warnings, "/sections"))
+        self.assertFalse(any("should be the first" in item["message"] for item in warnings), warnings)
+
+    def test_example_missing_fields_and_caps(self):
+        section = self._example()
+        del section["after"]
+        explain = copy.deepcopy(self.plan)
+        explain["sections"].insert(0, section)
+        errors, _warnings = self._errors(explain)
+        self._assert_error(errors, "/sections/0/after", "missing key after")
+        explain = self._with_example(now=" ".join(["word"] * 61))
+        errors, _warnings = self._errors(explain)
+        self._assert_error(errors, "/sections/0/now", "exceeds 60 words")
+        explain = self._with_example(now=" ".join(["word"] * 60))
+        self.assertEqual(self._errors(explain)[0], [])
+        explain = self._with_example(extra="no")
+        self._assert_error(self._errors(explain)[0], "/sections/0/extra", "unknown key extra")
+
+    def test_second_example_is_error(self):
+        explain = self._with_example()
+        explain["sections"].insert(2, self._example(id="case-two"))
+        errors, _warnings = self._errors(explain)
+        self._assert_error(errors, "/sections/2", "at most one example section")
+        self.assertFalse(any(error["path"] == "/sections/0" and "at most one" in error["message"] for error in errors))
+
+    def test_example_not_first_warns(self):
+        explain = copy.deepcopy(self.plan)
+        explain["sections"].insert(2, self._example())
+        errors, warnings = self._errors(explain)
+        self.assertEqual(errors, [])
+        self.assertIn("example section should be the first section", self._messages(warnings, "/sections/2"))
+        self.assertNotIn(NO_EXAMPLE, self._messages(warnings, "/sections"))
+
+    def test_fixtures_warn_no_example(self):
+        for name, explain, evidence, session in (
+            ("plan", self.plan, self.plan_evidence, self.plan_meta),
+            ("idea", self.idea, self.idea_evidence, self.idea_meta),
+        ):
+            with self.subTest(name=name):
+                errors, warnings = self._errors(explain, evidence=evidence, session=session)
+                self.assertEqual(errors, [])
+                self.assertIn(NO_EXAMPLE, self._messages(warnings, "/sections"))
+                self.assertEqual([w for w in warnings if w["path"] != "/sections"], [])
+
+    def test_example_allowed_for_all_kinds(self):
+        from explainlib import validate as v
+
+        for kind in ("plan", "idea", "codebase"):
+            self.assertIn("example", v._SECTION_KINDS[kind])
+        explain = self._with_example(self.idea, evidence="E5")
+        errors, warnings = self._errors(explain, evidence=self.idea_evidence, session=self.idea_meta)
+        self.assertEqual(errors, [])
+        self.assertNotIn(NO_EXAMPLE, self._messages(warnings, "/sections"))
+
+    def test_code_like_labels_warn(self):
+        for label in ("T1 parser", "D rebuild", "T5\u2013T6 screen", "finalize_run", "cli.py", "src/app", "build()"):
+            with self.subTest(label=label):
+                explain = copy.deepcopy(self.plan)
+                explain["hero"]["nodes"][0]["label"] = label
+                errors, warnings = self._errors(explain)
+                self.assertEqual(errors, [])
+                self.assertEqual(self._messages(warnings, "/hero/nodes/0/label"), [CODE_LABEL])
+        for label in ("CLI", "Member", "Command line (cli.py)", "DNS lookup", "A member", "I agree"):
+            with self.subTest(label=label):
+                explain = copy.deepcopy(self.plan)
+                explain["hero"]["nodes"][0]["label"] = label
+                _errors, warnings = self._errors(explain)
+                self.assertEqual(self._messages(warnings, "/hero/nodes/0/label"), [])
+        explain = copy.deepcopy(self.plan)
+        explain["hero"]["zones"][0]["label"] = "T2 zone"
+        explain["sections"][0]["title"] = "T3 importer"
+        explain["title"] = "T1"
+        errors, warnings = self._errors(explain)
+        self.assertEqual(errors, [])
+        self.assertEqual(self._messages(warnings, "/hero/zones/0/label"), [CODE_LABEL])
+        self.assertEqual(self._messages(warnings, "/sections/0/title"), [CODE_LABEL])
+        self.assertEqual(self._messages(warnings, "/title"), [])
+
+    def _level1(self, text, glossary=(), title=None, levels=(1, 3, 5), lead_text=None):
+        explain = copy.deepcopy(self.plan)
+        explain["glossary"] = [{"term": term, "definition": "Explained."} for term in glossary]
+        explain["lead"]["text"] = lead_text if lead_text is not None else {
+            "1": text,
+            "3": "Level three text with API and ZQX.",
+            "5": "Level five text with API and ZQX.",
+        }
+        if title is not None:
+            explain["title"] = title
+        if tuple(levels) != (1, 3, 5):
+            explain["levels"] = list(levels)
+            session = dict(self.plan_meta, levels=list(levels))
+            explain["lead"]["text"] = {str(level): text for level in levels}
+            return validate_explain(explain, self.plan_evidence, session, self.brief)[1]
+        return self._errors(explain)[1]
+
+    def _terms(self, warnings):
+        found = self._messages(warnings, "/glossary")
+        self.assertLessEqual(len(found), 1, found)
+        if not found:
+            return []
+        self.assertTrue(found[0].startswith(LEVEL1_PREFIX), found)
+        return found[0][len(LEVEL1_PREFIX):].split(", ")
+
+    def test_level1_terms_warning(self):
+        text = "The ZQX file feeds T1 and `load_run`."
+        self.assertEqual(self._terms(self._level1(text)), ["ZQX", "T1", "load_run"])
+        self.assertEqual(self._terms(self._level1(text, glossary=["ZQX"])), ["T1", "load_run"])
+        self.assertEqual(self._terms(self._level1(text, glossary=["ZQX", "T1", "load_run"])), [])
+        self.assertEqual(self._terms(self._level1("API (application programming interface) answers.")), [])
+        self.assertEqual(self._terms(self._level1("An application programming interface (API) answers.")), [])
+        self.assertEqual(self._terms(self._level1("The API answers.")), ["API"])
+        self.assertEqual(self._terms(self._level1("(API) answers first.")), ["API"])
+        self.assertEqual(self._terms(self._level1("Plain words only.")), [])
+        self.assertEqual(self._terms(self._level1("The ASNs answer.", glossary=["ASN"])), [])
+        self.assertEqual(self._terms(self._level1("The ZQX file.", glossary=["ZQX file format"])), [])
+        self.assertEqual(self._terms(self._level1("The API answers.", title="API gateway")), [])
+
+    def test_level1_terms_only_when_level_one_is_written(self):
+        self.assertEqual(self._terms(self._level1("The API answers.", levels=(3,))), [])
+        self.assertEqual(self._terms(self._level1("The API answers.", levels=(1, 3))), ["API"])
+        # An acronym present only at levels 3 and 5 does not warn.
+        explain_text = {"1": "Plain words only.", "3": "The API answers.", "5": "The API answers."}
+        self.assertEqual(self._terms(self._level1(None, lead_text=explain_text)), [])
+
+    def test_level1_terms_caps_at_ten_in_first_seen_order(self):
+        text = " ".join(f"T{number}" for number in range(1, 13))
+        terms = self._terms(self._level1(text))
+        self.assertEqual(terms, [f"T{number}" for number in range(1, 11)])
+
+    def test_caps_loosened(self):
+        def errors_for(mutate):
+            explain = copy.deepcopy(self.plan)
+            mutate(explain)
+            return self._errors(explain)[0]
+
+        def label(size):
+            return lambda e: e["hero"]["nodes"].__getitem__(0).__setitem__("label", "L" * size)
+
+        self.assertEqual(errors_for(label(40)), [])
+        self._assert_error(errors_for(label(41)), "/hero/nodes/0/label", "40 characters")
+        sixty, over = " ".join(["word"] * 60), " ".join(["word"] * 61)
+        change = next(i for i, s in enumerate(self.plan["sections"]) if s["type"] == "change")
+
+        def step(text):
+            return lambda e: e["hero"]["steps"][0].__setitem__("text", text)
+
+        def item(text):
+            return lambda e: e["sections"][change]["now"][0].__setitem__("text", text)
+
+        self.assertEqual(errors_for(step(sixty)), [])
+        self._assert_error(errors_for(step(over)), "/hero/steps/0/text", "exceeds 60 words")
+        self.assertEqual(errors_for(item(sixty)), [])
+        self._assert_error(errors_for(item(over)), f"/sections/{change}/now/0/text", "exceeds 60 words")
+        # Nine sections are allowed, ten are not.
+        explain = copy.deepcopy(self.plan)
+        while len(explain["sections"]) < 9:
+            extra = copy.deepcopy(explain["sections"][0])
+            extra["id"] = f"extra-{len(explain['sections'])}"
+            explain["sections"].append(extra)
+        self.assertEqual(self._errors(explain)[0], [])
+        extra = copy.deepcopy(explain["sections"][0])
+        extra["id"] = "extra-last"
+        explain["sections"].append(extra)
+        self._assert_error(self._errors(explain)[0], "/sections", "expected 3..9 items")
+
+    def test_map_role_cap_is_sixty_words(self):
+        from explainlib import validate as v
+
+        entry = {"path": "a.py", "role": " ".join(["word"] * 60), "evidence": [], "confidence": "inferred"}
+        section = {"entries": [entry]}
+        self.assertEqual(v._validate_map(section, "/s", [1, 3, 5], {}, "codebase", None), [])
+        entry["role"] = " ".join(["word"] * 61)
+        errors = v._validate_map(section, "/s", [1, 3, 5], {}, "codebase", None)
+        self._assert_error(errors, "/s/entries/0/role", "exceeds 60 words")
+
+    def test_claim_units_and_leaves_include_example(self):
+        explain = self._with_example()
+        units = claim_units(explain)
+        self.assertEqual(units[7], "/sections/0")
+        self.assertEqual(units.count("/sections/0"), 1)
+        leaves = [leaf for unit, leaf in claim_leaves(explain) if unit == "/sections/0"]
+        self.assertEqual(
+            leaves,
+            [f"/sections/0/{field}" for field in ("situation", "now", "after")],
+        )
+        explain["sections"][0]["now"] = {"1": "One.", "3": "Three.", "5": "Five."}
+        leaves = [leaf for unit, leaf in claim_leaves(explain) if unit == "/sections/0"]
+        self.assertEqual(
+            leaves,
+            ["/sections/0/situation", "/sections/0/now/1", "/sections/0/now/3", "/sections/0/now/5", "/sections/0/after"],
+        )
+
+    def test_words_at_level_counts_example(self):
+        from explainlib import validate as v
+
+        base = v._words_at_level(self.plan, 3)
+        added = v._words_at_level(self._with_example(), 3)
+        self.assertEqual(added - base, 2 + 8 + 9 + 10)  # title, situation, now, after
+
+    def test_apply_corrections_example_leaf(self):
+        session = helpers.make_session(self.env, "idea", slug="idea-example", levels=3, lang="en")
+        for args in (
+            ("ingest", "--session", session, "--text-file", helpers.FIXTURES / "idea.md"),
+            ("frame", "--session", session, "--audience", "Neighbours", "--question", "What changes?"),
+        ):
+            code, out, err = helpers.run_cli(*args, env=self.env)
+            self.assertEqual(code, 0, out + err)
+        explain = self._with_example(self.idea, evidence="E5")
+        explain["sections"][0]["now"] = {
+            "1": "A neighbour asks around for a drill.",
+            "3": "A neighbour asks around the street for a drill.",
+            "5": "A neighbour asks several households for a drill.",
+        }
+        (session / "explain.json").write_text(json.dumps(explain), encoding="utf-8")
+        code, out, err = helpers.run_cli("validate", "--session", session, env=self.env)
+        self.assertEqual(code, 0, out + err)
+        code, out, err = helpers.run_cli("check-prepare", "--session", session, "--kind", "factcheck", env=self.env)
+        self.assertEqual(code, 0, out + err)
+        request = json.loads((session / "checks" / "factcheck-request.json").read_text(encoding="utf-8"))
+        corrected = "A neighbour walks to the shelf and takes a drill."
+        claims = []
+        for _unit, leaf in claim_leaves(explain):
+            fixed = leaf == "/sections/0/now/1"
+            claims.append(
+                {
+                    "ref": leaf,
+                    "claim": "The example leaf is checked against the idea text.",
+                    "verdict": "corrected" if fixed else "verified",
+                    "evidence": ["E5"],
+                    "correction": corrected if fixed else None,
+                }
+            )
+        report = {
+            "explain_report": 1,
+            "kind": "factcheck",
+            "model": "codex/gpt-example",
+            "explain_sha256": request["explain_sha256"],
+            "claims": claims,
+            "plan_checks": [],
+            "summary": "Synthetic fact-check report.",
+        }
+        (session / "factcheck.json").write_text(json.dumps(report), encoding="utf-8")
+        code, out, err = helpers.run_cli("check-report", "--session", session, "--kind", "factcheck", env=self.env)
+        self.assertEqual(code, 0, out + err)
+        code, out, err = helpers.run_cli("apply-corrections", "--session", session, env=self.env)
+        self.assertEqual(code, 0, out + err)
+        updated = json.loads((session / "explain.json").read_text(encoding="utf-8"))
+        self.assertEqual(updated["sections"][0]["now"]["1"], corrected)
+        self.assertEqual(updated["sections"][0]["now"]["3"], explain["sections"][0]["now"]["3"])
+
+    def test_schema_md_plan_example_validates(self):
+        self._check_schema_md_example("plan")
+
+    def test_schema_md_idea_example_validates(self):
+        self._check_schema_md_example("idea")
+
+    def _check_schema_md_example(self, kind):
+        text = SCHEMA_MD.read_text(encoding="utf-8")
+        start = text.index(f"## Minimal {kind} example")
+        example = json.loads(re.search(r"```json\n(.*?)\n```", text[start:], re.S).group(1))
+        self.assertEqual(example["kind"], kind)
+        self.assertEqual(example["sections"][0]["type"], "example")
+        with tempfile.TemporaryDirectory(prefix="pe-schema-") as tmp:
+            home = Path(tmp)
+            env = {"HOME": str(home), "PASEO_EXPLAIN_HOME": str(home / "pe"), "XDG_CONFIG_HOME": str(home / "cfg")}
+            if kind == "plan":
+                source = home / "plan.txt"
+                source.write_text(
+                    "Garden members book plots. One booking per plot. The board lists free plots.\n", encoding="utf-8"
+                )
+                session = helpers.make_session(env, "plan", slug="garden-example", mode="quick")
+                ingest = ("--file", f"plan={source}")
+                frame = ("--audience", "Garden members", "--question", "How are plots booked?")
+            else:
+                source = home / "idea.txt"
+                source.write_text(
+                    "Neighbours could share tools on a shelf. A volunteer could check returns.\n", encoding="utf-8"
+                )
+                session = helpers.make_session(env, "idea", slug="shelf-example", mode="quick")
+                ingest = ("--text-file", str(source))
+                frame = ("--audience", "Neighbours", "--question", "How could tool lending work?")
+            for args in (("frame", "--session", session, *frame), ("ingest", "--session", session, *ingest)):
+                code, out, err = helpers.run_cli(*args, env=env)
+                self.assertEqual(code, 0, out + err)
+            (session / "explain.json").write_text(json.dumps(example), encoding="utf-8")
+            code, out, err = helpers.run_cli("validate", "--session", session, env=env)
+            self.assertEqual(code, 0, out + err)
+            self.assertEqual(json.loads(out)["warnings"], [])
 
     def test_schema_matches_validator_keys(self):
         schema = json.loads(

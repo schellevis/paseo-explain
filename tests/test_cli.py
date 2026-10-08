@@ -122,7 +122,7 @@ class CliIntegrationTests(unittest.TestCase):
 
     def test_version_help_and_usage_error(self):
         code, out, err = helpers.run_cli("--version", env=self.env)
-        self.assertEqual((code, out.strip(), err), (0, "paseo-explain 0.2.1", ""))
+        self.assertEqual((code, out.strip(), err), (0, "paseo-explain 0.3.0", ""))
         for command in SUBCOMMANDS:
             with self.subTest(command=command):
                 code, out, err = helpers.run_cli(command, "--help", env=self.env)
@@ -156,7 +156,7 @@ class CliIntegrationTests(unittest.TestCase):
         result = self.cli("result", "--session", session)
         self.assertEqual(result["kind"], "codebase")
         self.assertIsNone(result["doc"])
-        self.assertEqual(result["version"], "0.2.1")
+        self.assertEqual(result["version"], "0.3.0")
         self.assertEqual(result["checks"]["validate"], "pass")
 
     def test_serve_accepts_all_interfaces_ipv4(self):

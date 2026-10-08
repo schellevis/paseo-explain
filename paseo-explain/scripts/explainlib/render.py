@@ -46,6 +46,12 @@ _COPY = {
         "not_checked": "Not independently checked",
         "skip": "Fact-check skipped: {reason}",
         "reader": "Reader test: {correct}/{total} questions answered",
+        "reader_unscored": "Reader test: read for unexplained terms",
+        "example": {
+            "plan": ("The situation", "Today", "After this plan"),
+            "idea": ("The situation", "Today", "With this idea"),
+            "codebase": ("What goes in", "What happens", "What comes out"),
+        },
         "flagged": "Contains instruction-like text in the sources; treated as data",
         "depth_docs": "Based on documentation; code not read",
         "depth_code": "Based on documentation and {n} code excerpts",
@@ -66,6 +72,12 @@ _COPY = {
         "not_checked": "Niet onafhankelijk gecontroleerd",
         "skip": "Feitencheck overgeslagen: {reason}",
         "reader": "Lezerstest: {correct}/{total} vragen beantwoord",
+        "reader_unscored": "Lezerstest: gelezen op onverklaarde termen",
+        "example": {
+            "plan": ("De situatie", "Nu", "Na dit plan"),
+            "idea": ("De situatie", "Nu", "Met dit idee"),
+            "codebase": ("Wat erin gaat", "Wat er gebeurt", "Wat eruit komt"),
+        },
         "flagged": "Bevat instructie-achtige tekst in de bronnen; behandeld als data",
         "depth_docs": "Gebaseerd op documentatie; code niet gelezen",
         "depth_code": "Gebaseerd op documentatie en {n} codefragmenten",
@@ -257,8 +269,11 @@ def _banner_lines(meta, explain, evidence):
     if isinstance(reason, str) and reason:
         lines.append(copy["skip"].format(reason=_inline(reason)))
     grade = meta.get("reader_grade") if isinstance(meta.get("reader_grade"), dict) else None
-    if meta.get("mode") == "deep" and isinstance(grade, dict) and grade.get("total") is not None:
-        lines.append(copy["reader"].format(correct=grade.get("correct"), total=grade.get("total")))
+    if meta.get("mode") in ("standard", "deep") and isinstance(grade, dict) and grade.get("total") is not None:
+        if grade.get("total") == 0:
+            lines.append(copy["reader_unscored"])
+        else:
+            lines.append(copy["reader"].format(correct=grade.get("correct"), total=grade.get("total")))
     if _any_flagged(explain, evidence):
         lines.append(copy["flagged"])
     return lines
@@ -294,6 +309,19 @@ def _change_md(section, level, index, lang):
                 "- " + _inline(_text_at(item.get("text"), level)) + _anchor_suffix(_item_ids(item), index)
             )
         blocks.append("\n".join(lines))
+    body = "\n\n".join(blocks)
+    extra = _anchor_suffix(_ids(section), index).strip()
+    if extra:
+        body += "\n\n" + extra
+    return body
+
+
+def _example_md(section, level, index, lang, kind):
+    labels_by_kind = _copy(lang)["example"]
+    labels = labels_by_kind.get(kind) or labels_by_kind["plan"]
+    blocks = []
+    for key, label in zip(("situation", "now", "after"), labels):
+        blocks.append(f"**{label}**\n\n{_esc(_text_at(section.get(key), level))}")
     body = "\n\n".join(blocks)
     extra = _anchor_suffix(_ids(section), index).strip()
     if extra:
@@ -398,7 +426,7 @@ def _diagram_md(section, level, index):
     return "\n\n".join(part for part in (caption, _fence("mermaid", _esc(source)), _esc(alt)) if part)
 
 
-def _section_md(section, number, level, index, lang, for_reader):
+def _section_md(section, number, level, index, lang, for_reader, doc_kind=None):
     copy = _copy(lang)
     parts = [f"## {number:02d} {_inline(section.get('title') or '')}"]
     if "subtitle" in section:
@@ -408,6 +436,8 @@ def _section_md(section, number, level, index, lang, for_reader):
     kind = section.get("type")
     if kind == "prose":
         parts.append(_paragraphs(_text_at(section.get("body"), level), _ids(section), index))
+    elif kind == "example":
+        parts.append(_example_md(section, level, index, lang, doc_kind))
     elif kind == "change":
         parts.append(_change_md(section, level, index, lang))
     elif kind == "diagram":
@@ -504,7 +534,7 @@ def render_markdown(explain, evidence, meta, level, for_reader=False) -> str:
     parts.append(_overview(explain, level, index))
     for number, section in enumerate(explain.get("sections") or [], 1):
         if isinstance(section, dict):
-            parts.append(_section_md(section, number, level, index, lang, for_reader))
+            parts.append(_section_md(section, number, level, index, lang, for_reader, explain.get("kind")))
     glossary = _glossary(explain)
     if glossary:
         parts.append(glossary)
@@ -561,7 +591,10 @@ def _compose_meta(session, explain, evidence, computed, session_dir):
     models = computed.get("models") if isinstance(computed, dict) and isinstance(computed.get("models"), dict) else {}
     config = load_config()
     theme = config["values"]["theme"] if config["sources"]["theme"] == "config" else None
-    grade = session.get("reader_grade")
+    from explainlib.reports import reader_state
+
+    state = reader_state(session_dir)
+    grade = state.get("grade") if state.get("state") == "counted" else None
     if not isinstance(grade, dict):
         grade = None
     lang = explain.get("lang") if isinstance(explain.get("lang"), str) else session.get("lang")

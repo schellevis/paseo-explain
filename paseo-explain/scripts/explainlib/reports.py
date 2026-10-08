@@ -486,7 +486,10 @@ def prepare(session_dir, kind: str) -> dict:
             "units": len(units),
         }
     questions = brief.get("check_questions")
-    if not isinstance(questions, list) or not 1 <= len(questions) <= 5:
+    if not isinstance(questions, list):
+        questions = []
+    minimum = 0 if session.get("mode") == "standard" else 1
+    if not minimum <= len(questions) <= 5:
         raise ExplainError(1, "reader check requires 1 to 5 check questions")
     texts = []
     for item in questions:
@@ -839,7 +842,7 @@ def reader_state(session_dir) -> dict:
     request = _parse_optional(root / "checks" / "reader-request.json")
     brief = _parse_optional(root / "brief.json")
     questions = brief.get("check_questions") if isinstance(brief, dict) else None
-    current_q = canonical_sha256(questions) if isinstance(questions, list) else None
+    current_q = canonical_sha256(questions if isinstance(questions, list) else [])
     report_hash = None
     report_path = root / "reader.json"
     if report_path.is_file():
@@ -885,12 +888,16 @@ def grade(session_dir, correct: int) -> dict:
         session = load_session(root)
     except FileNotFoundError:
         raise ExplainError(1, "session.json is missing") from None
+    standard = session.get("mode") == "standard"
     brief_path = root / "brief.json"
-    if not brief_path.is_file():
-        raise ExplainError(1, "brief has no check questions")
-    brief = _load_report_file(brief_path)
-    questions = brief.get("check_questions") if isinstance(brief, dict) else None
-    if not isinstance(questions, list) or len(questions) == 0:
+    if brief_path.is_file():
+        brief = _load_report_file(brief_path)
+        questions = brief.get("check_questions") if isinstance(brief, dict) else None
+    else:
+        questions = None
+    if not isinstance(questions, list):
+        questions = []
+    if not questions and not standard:
         raise ExplainError(1, "brief has no check questions")
     report_path = root / "reader.json"
     if not report_path.is_file():

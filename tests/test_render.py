@@ -437,6 +437,119 @@ class RenderTests(unittest.TestCase):
         self.assertIn("Neighbours book one garden plot for a season.", level_one)
         self.assertNotIn(lead, level_one)
 
+    def _example_doc(self, base, kind, lang="en"):
+        explain = copy.deepcopy(base)
+        explain["kind"] = kind
+        explain["lang"] = lang
+        explain["sections"].insert(
+            0,
+            {
+                "id": "case",
+                "type": "example",
+                "title": "One case",
+                "evidence": ["E1"],
+                "confidence": "inferred",
+                "situation": "A member wants a plot.",
+                "now": {"1": "Asks <b>by hand</b>.", "3": "Asks <b>by hand</b> at the board.", "5": "Asks <b>by hand</b> at the board."},
+                "after": "Books it online.",
+            },
+        )
+        return explain
+
+    def test_example_markdown_labels_per_kind_and_escaping(self):
+        from explainlib import render
+
+        meta = {"check_label": "not_checked", "mode": "quick", "models": {}, "checks": {}, "skipped": {}}
+        expected = {
+            "plan": ("The situation", "Today", "After this plan"),
+            "idea": ("The situation", "Today", "With this idea"),
+            "codebase": ("What goes in", "What happens", "What comes out"),
+        }
+        for kind, labels in expected.items():
+            md = render.render_markdown(self._example_doc(self.plan, kind), self.plan_evidence, meta, 3)
+            for label in labels:
+                self.assertIn(f"**{label}**", md)
+            self.assertLess(md.index(labels[0]), md.index(labels[1]))
+            self.assertLess(md.index(labels[1]), md.index(labels[2]))
+            self.assertIn("Asks &lt;b&gt;by hand&lt;/b&gt; at the board.", md)
+            self.assertNotIn("<b>", md)
+            self.assertIn("A member wants a plot.", md)
+        md1 = render.render_markdown(self._example_doc(self.plan, "plan"), self.plan_evidence, meta, 1)
+        self.assertIn("Asks &lt;b&gt;by hand&lt;/b&gt;.", md1)
+        self.assertNotIn("at the board", md1)
+        nl = render.render_markdown(self._example_doc(self.plan, "codebase", "nl"), self.plan_evidence, meta, 3)
+        for label in ("Wat erin gaat", "Wat er gebeurt", "Wat eruit komt"):
+            self.assertIn(f"**{label}**", nl)
+        nl_idea = render.render_markdown(self._example_doc(self.plan, "idea", "nl"), self.plan_evidence, meta, 3)
+        self.assertIn("**Met dit idee**", nl_idea)
+        reader = render.render_markdown(
+            self._example_doc(self.plan, "plan"), self.plan_evidence, meta, 3, for_reader=True
+        )
+        self.assertIn("**After this plan**", reader)
+        self.assertIn("Books it online.", reader)
+
+    def test_example_html_payload_and_template(self):
+        from explainlib import render
+
+        explain = self._example_doc(self.plan, "plan")
+        meta = {"lang": "en", "levels": [1, 3, 5]}
+        page = render._render_html(explain, self.plan_evidence, meta)
+        restored = json.loads(_payload(page).replace("\\u003c", "<").replace("\\u003e", ">").replace("\\u0026", "&"))
+        self.assertEqual(restored["explain"]["sections"][0]["type"], "example")
+        self.assertIn("function renderExample(sec)", self.template)
+        self.assertIn('sec.type === "example") section.appendChild(renderExample(sec))', self.template)
+        start = self.template.index("function renderExample(sec)")
+        body = self.template[start : self.template.index("function renderChange", start)]
+        self.assertNotIn("innerHTML", body)
+        self.assertIn("bindText(", body)
+        for key in ("exPlanAfter", "exIdeaAfter", "exCodeSituation", "readerUnscored"):
+            self.assertEqual(self.template.count(f"{key}:"), 2)
+        self.assertIn("Reader test: read for unexplained terms", self.template)
+        self.assertIn("Lezerstest: gelezen op onverklaarde termen", self.template)
+        self.assertIn('meta.mode === "standard"', self.template)
+        self.assertIn("grade.total === 0", self.template)
+
+    def test_hero_node_width_follows_measured_text(self):
+        fit = self.template[self.template.index("function fitWidth(n)") :]
+        fit = fit[: fit.index("function ", 10)]
+        self.assertIn("getComputedTextLength() + 32", fit)
+        self.assertIn("n.w = need", fit)
+        clamp = self.template[self.template.index("function clampNode(n)") :]
+        self.assertIn("n.w > 1000", clamp[:200])
+        self.assertNotIn("n.w > 320", self.template)
+
+    def test_reader_line_only_for_counted_grade(self):
+        from explainlib import render
+
+        base = {"check_label": "not_checked", "models": {}, "checks": {}, "skipped": {}}
+        zero = {"correct": 0, "total": 0, "report_sha256": "x"}
+        two = {"correct": 2, "total": 3, "report_sha256": "x"}
+        md = render.render_markdown(self.plan, self.plan_evidence, {**base, "mode": "standard", "reader_grade": zero}, 3)
+        self.assertIn("> Reader test: read for unexplained terms", md)
+        self.assertNotIn("0/0", md)
+        deep = render.render_markdown(self.plan, self.plan_evidence, {**base, "mode": "deep", "reader_grade": two}, 3)
+        self.assertIn("> Reader test: 2/3 questions answered", deep)
+        nl = copy.deepcopy(self.plan)
+        nl["lang"] = "nl"
+        md_nl = render.render_markdown(nl, self.plan_evidence, {**base, "mode": "standard", "reader_grade": zero}, 3)
+        self.assertIn("> Lezerstest: gelezen op onverklaarde termen", md_nl)
+        for mode in ("quick", "standard"):
+            none = render.render_markdown(self.plan, self.plan_evidence, {**base, "mode": mode, "reader_grade": None}, 3)
+            self.assertNotIn("Reader test", none)
+
+    def test_compose_meta_reader_grade_follows_reader_state(self):
+        from explainlib import render
+        from explainlib.common import load_session
+
+        session = load_session(self.plan_session)
+        grade = {"correct": 0, "total": 0, "report_sha256": "x"}
+        for state, expected in (("counted", grade), ("stale", None), ("none", None)):
+            with mock.patch(
+                "explainlib.reports.reader_state", return_value={"state": state, "grade": grade, "report": None}
+            ):
+                meta = render._compose_meta(session, self.plan, self.plan_evidence, {}, self.plan_session)
+            self.assertEqual(meta["reader_grade"], expected, state)
+
     def test_markdown_escapes_angles_reader_and_banner(self):
         from explainlib import render
 
@@ -560,7 +673,7 @@ class RenderTests(unittest.TestCase):
         meta = restored["meta"]
         self.assertEqual(set(meta), META_KEYS)
         self.assertNotIn("status", meta)
-        self.assertEqual(meta["version"], "0.2.1")
+        self.assertEqual(meta["version"], "0.3.0")
         self.assertEqual(meta["checks"], CHECKS)
         self.assertEqual(meta["check_label"], "not_checked")
         self.assertEqual(meta["skipped"], CHECKS["skipped"])

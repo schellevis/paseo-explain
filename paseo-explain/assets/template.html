@@ -8,7 +8,7 @@ See THIRD_PARTY_LICENSES.md.
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{NONCE}}' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'">
-<meta name="paseo-explain" content="0.2.1">
+<meta name="paseo-explain" content="0.3.0">
 <title>{{TITLE}}</title>
 <style>
 :root{--bg:#0a0d12;--bg-2:#0f1419;--panel:#121821;--panel-2:#182030;--border:#1f2937;--border-2:#2a3650;--text:#e6edf7;--muted:#8492a8;--dim:#5a6679;
@@ -67,6 +67,7 @@ tr.r{cursor:pointer}tr.r:hover,tr.r.sel{background:rgba(106,169,255,.07)}td.x{co
 .dec{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.dec .card.chosen{border-color:var(--mint);box-shadow:0 0 0 1px rgba(70,249,184,.25),0 0 30px rgba(70,249,184,.08)}
 .dec .k,.risks .k{font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}.dec .chosen .k{color:var(--mint)}.dec h4,.risks h4{margin:4px 0 6px;font-size:15.5px}.dec p,.risks p{margin:0;font-size:14px;color:var(--muted)}
 .risks{display:grid;grid-template-columns:1fr 1fr;gap:14px}.risks .card.risk .k{color:var(--mag)}.risks .card.open_question .k{color:var(--amber)}.risks .card.assumption .k{color:var(--violet)}
+.example .ex-block{margin-bottom:14px}.example h3{margin:0 0 4px;font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}.example p{margin:0}
 details{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:10px}summary{cursor:pointer;font-weight:500}summary::marker{color:var(--mint)}details p{color:var(--muted);margin:8px 0 0}
 .chip{font:600 10.5px var(--mono);border:1px solid var(--border-2);background:rgba(255,255,255,.04);color:var(--muted);border-radius:6px;padding:1px 6px;margin:0 2px;cursor:pointer}.chip:hover{border-color:var(--sky);color:var(--sky)}
 aside{position:fixed;top:0;right:0;height:100%;width:380px;max-width:92vw;background:var(--panel);border-left:1px solid var(--border-2);box-shadow:-20px 0 60px rgba(0,0,0,.5);transform:translateX(105%);transition:transform .22s;z-index:10;padding:22px;overflow:auto}
@@ -207,6 +208,16 @@ details{break-inside:avoid}
       notChecked: "Not independently checked",
       skip: "Fact-check skipped: {reason}",
       reader: "Reader test: {correct}/{total} questions answered",
+      readerUnscored: "Reader test: read for unexplained terms",
+      exPlanSituation: "The situation",
+      exPlanNow: "Today",
+      exPlanAfter: "After this plan",
+      exIdeaSituation: "The situation",
+      exIdeaNow: "Today",
+      exIdeaAfter: "With this idea",
+      exCodeSituation: "What goes in",
+      exCodeNow: "What happens",
+      exCodeAfter: "What comes out",
       step: "Step",
       evidence: "Evidence",
       followup: "Follow-up prompt",
@@ -267,6 +278,16 @@ details{break-inside:avoid}
       notChecked: "Niet onafhankelijk gecontroleerd",
       skip: "Feitencheck overgeslagen: {reason}",
       reader: "Lezerstest: {correct}/{total} vragen beantwoord",
+      readerUnscored: "Lezerstest: gelezen op onverklaarde termen",
+      exPlanSituation: "De situatie",
+      exPlanNow: "Nu",
+      exPlanAfter: "Na dit plan",
+      exIdeaSituation: "De situatie",
+      exIdeaNow: "Nu",
+      exIdeaAfter: "Met dit idee",
+      exCodeSituation: "Wat erin gaat",
+      exCodeNow: "Wat er gebeurt",
+      exCodeAfter: "Wat eruit komt",
       step: "Stap",
       evidence: "Bewijs",
       followup: "Vervolgprompt",
@@ -747,7 +768,7 @@ function openPanel(title, detail, ids, confidence) {
   }
 
   function footerText() {
-    var ver = meta.version || "0.2.1";
+    var ver = meta.version || "0.3.0";
     var round = meta.round == null ? "" : String(meta.round);
     var when = meta.generated_at || "";
     if (nl) {
@@ -994,6 +1015,7 @@ function openNode(n) {
     row = evidenceRow(sec.evidence, sec.confidence, ctx);
     if (row) section.appendChild(row);
     if (sec.type === "prose") section.appendChild(renderProse(sec));
+    else if (sec.type === "example") section.appendChild(renderExample(sec));
     else if (sec.type === "change") section.appendChild(renderChange(sec));
     else if (sec.type === "diagram") section.appendChild(renderDiagram(sec));
     else if (sec.type === "coverage") section.appendChild(renderCoverage(sec));
@@ -1013,6 +1035,7 @@ function openNode(n) {
 
   function sectionDetail(sec) {
     if (sec.type === "prose") return sec.body;
+    if (sec.type === "example") return sec.situation;
     if (sec.type === "diagram") return sec.caption;
     if (sec.subtitle != null) return sec.subtitle;
     return sec.title || "";
@@ -1021,6 +1044,22 @@ function openNode(n) {
   function renderProse(sec) {
     var box = el("div", {"class": "prose"});
     bindProse(box, sec.body);
+    return box;
+  }
+
+  function renderExample(sec) {
+    var box = el("div", {"class": "example"});
+    var prefix = explain.kind === "codebase" ? "exCode" : explain.kind === "idea" ? "exIdea" : "exPlan";
+    var keys = [["situation", "Situation"], ["now", "Now"], ["after", "After"]];
+    var i, block, p;
+    for (i = 0; i < keys.length; i++) {
+      block = el("div", {"class": "ex-block"});
+      block.appendChild(el("h3", {}, t(prefix + keys[i][1])));
+      p = el("p");
+      bindText(p, sec[keys[i][0]]);
+      block.appendChild(p);
+      box.appendChild(block);
+    }
     return box;
   }
 
@@ -1730,9 +1769,9 @@ function openNode(n) {
     else if (meta.depth === "code") banner.appendChild(el("p", {}, fill(t("depthCode"), {n: meta.code_excerpts || 0})));
     skipped = meta.skipped || {};
     if (skipped.fact_check) banner.appendChild(el("p", {}, fill(t("skip"), {reason: skipped.fact_check})));
-    if (meta.mode === "deep" && meta.reader_grade && meta.reader_grade.total != null) {
+    if ((meta.mode === "deep" || meta.mode === "standard") && meta.reader_grade && meta.reader_grade.total != null) {
       grade = meta.reader_grade;
-      banner.appendChild(el("p", {}, fill(t("reader"), {correct: grade.correct, total: grade.total})));
+      banner.appendChild(el("p", {}, grade.total === 0 ? t("readerUnscored") : fill(t("reader"), {correct: grade.correct, total: grade.total})));
     }
     var notice = flaggedNotice();
     if (notice) banner.appendChild(el("p", {"class": "flag"}, notice));

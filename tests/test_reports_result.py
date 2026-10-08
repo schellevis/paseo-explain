@@ -789,6 +789,146 @@ class ReportResultTests(unittest.TestCase):
         walk(schema)
 
 
+class ReaderWithoutQuestionsTests(unittest.TestCase):
+    """The reader test works in standard mode with no check questions."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory(prefix="pe-test-")
+        self.addCleanup(self._tmp.cleanup)
+        root = Path(self._tmp.name)
+        self.env = {
+            "HOME": str(root),
+            "PASEO_EXPLAIN_HOME": str(root / "pe"),
+            "XDG_CONFIG_HOME": str(root / "cfg"),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
+
+    def _session(self, mode, questions=()):
+        session = helpers.make_session(
+            self.env,
+            "plan",
+            autopilot=str(helpers.FIXTURES / "autopilot-run"),
+            doc="plan",
+            levels=3,
+            lang="en",
+            mode=mode,
+        )
+        code, out, err = _cli(
+            self.env, "ingest", "--session", session, "--autopilot", helpers.FIXTURES / "autopilot-run", "--doc", "plan"
+        )
+        self.assertEqual(code, 0, out + err)
+        _frame(session, self.env, questions=questions)
+        shutil.copy(helpers.FIXTURES / "plan-explain.json", session / "explain.json")
+        code, out, err = _cli(self.env, "validate", "--session", session)
+        self.assertEqual(code, 0, out + err)
+        return session
+
+    def _prepare(self, session, expect=0):
+        code, out, err = _cli(self.env, "check-prepare", "--session", session, "--kind", "reader")
+        self.assertEqual(code, expect, out + err)
+        return out
+
+    def _reader_report(self, session, answers=(), terms=(), hard=()):
+        request = json.loads((session / "checks" / "reader-request.json").read_text(encoding="utf-8"))
+        body = {
+            "explain_report": 1,
+            "kind": "reader",
+            "model": "cursor/reader-example",
+            "explain_sha256": request["explain_sha256"],
+            "level": request["level"],
+            "answers": list(answers),
+            "undefined_terms": list(terms),
+            "hard_to_follow": list(hard),
+            "summary": "Synthetic reader report.",
+        }
+        write_json(session / "reader.json", body)
+        code, out, err = _cli(self.env, "check-report", "--session", session, "--kind", "reader")
+        self.assertEqual(code, 0, out + err)
+
+    def _result(self, session):
+        code, out, err = _cli(self.env, "result", "--session", session)
+        self.assertEqual(code, 0, out + err)
+        return json.loads(out)
+
+    def _grade(self, session, correct, expect=0):
+        code, out, err = _cli(self.env, "grade", "--session", session, "--correct", str(correct))
+        self.assertEqual(code, expect, out + err)
+        return out
+
+    def _render(self, session):
+        code, out, err = _cli(self.env, "render", "--session", session)
+        self.assertEqual(code, 0, out + err)
+
+    def _standard_flow(self, terms=()):
+        session = self._session("standard")
+        self._render(session)
+        self.assertEqual(self._result(session)["status"], "partial")
+        out = self._prepare(session)
+        self.assertEqual(json.loads(out)["units"], 0)
+        request = json.loads((session / "checks" / "reader-request.json").read_text(encoding="utf-8"))
+        self.assertEqual(request["questions"], [])
+        self.assertEqual(request["questions_sha256"], canonical_sha256([]))
+        self._reader_report(session, terms=terms)
+        self._grade(session, 0)
+        stored = json.loads((session / "session.json").read_text(encoding="utf-8"))["reader_grade"]
+        self.assertEqual(stored, {"correct": 0, "total": 0, "report_sha256": sha256_file(session / "reader.json")})
+        self._render(session)
+        return session
+
+    def test_standard_reader_without_questions(self):
+        session = self._standard_flow()
+        result = self._result(session)
+        self.assertEqual(result["checks"]["reader_test"], "pass")
+        self.assertEqual(result["status"], "partial")
+
+    def test_standard_reader_terms_make_partial(self):
+        session = self._standard_flow(terms=["ZQX"])
+        self.assertEqual(self._result(session)["checks"]["reader_test"], "partial")
+
+    def test_grade_zero_questions_range(self):
+        session = self._session("standard")
+        self._prepare(session)
+        self._reader_report(session)
+        out = self._grade(session, 1, expect=1)
+        self.assertIn("correct is out of range", out)
+
+    def test_deep_reader_still_requires_questions(self):
+        session = self._session("deep")
+        out = self._prepare(session, expect=1)
+        self.assertIn("reader check requires 1 to 5 check questions", out)
+
+    def _stale_cycle(self, mode, questions, correct):
+        session = self._session(mode, questions)
+        self._prepare(session)
+        answers = [{"q": index, "answer": "An answer."} for index in range(len(questions))]
+        self._reader_report(session, answers=answers)
+        self._grade(session, correct)
+        self.assertEqual(reader_state(session)["state"], "counted")
+        body = json.loads((session / "reader.json").read_text(encoding="utf-8"))
+        body["summary"] = "A second reading."
+        write_json(session / "reader.json", body)
+        self.assertEqual(reader_state(session)["state"], "stale")
+        self._grade(session, correct)
+        self.assertEqual(reader_state(session)["state"], "counted")
+        _frame(session, self.env, questions=tuple(questions) + (("Is there a deposit?", "No"),))
+        self.assertEqual(reader_state(session)["state"], "stale")
+        code, out, err = _cli(self.env, "validate", "--session", session)
+        self.assertEqual(code, 0, out + err)
+        self._prepare(session)
+        answers = [{"q": index, "answer": "An answer."} for index in range(len(questions) + 1)]
+        self._reader_report(session, answers=answers)
+        self._grade(session, correct)
+        self.assertEqual(reader_state(session)["state"], "counted")
+
+    def test_reader_state_stale_after_edits(self):
+        self._stale_cycle("standard", (), 0)
+        self._stale_cycle("deep", QUESTIONS[:2], 2)
+
+    def test_quick_mode_unchanged(self):
+        session = self._session("quick")
+        self.assertEqual(reader_state(session)["state"], "none")
+
+
 if __name__ == "__main__":
     unittest.main()
 

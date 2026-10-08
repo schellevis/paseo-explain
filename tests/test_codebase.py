@@ -1275,10 +1275,19 @@ class ValidateCase(IngestTestCase):
 
 
 class CodebaseValidateTests(ValidateCase):
-    def test_fixture_is_valid_without_warnings(self):
+    def test_fixture_warns_only_about_example_and_code_labels(self):
         out = self.validate()
         self.assertTrue(out["ok"])
-        self.assertEqual(out["warnings"], [])
+        self.assertIn(
+            {"path": "/sections", "message": "no example section; add one concrete case"}, out["warnings"]
+        )
+        # The unchanged fixture labels hero nodes with file names; nothing else warns.
+        others = [w for w in out["warnings"] if w["path"] != "/sections"]
+        self.assertEqual(
+            sorted(w["path"] for w in others),
+            ["/hero/nodes/1/label", "/hero/nodes/2/label", "/hero/nodes/3/label"],
+        )
+        self.assertTrue(all(w["message"].startswith("label starts with an internal code") for w in others))
         self.assertEqual(self.fragment_for("README.md", "§Run"), "E10")
 
     def test_confirmed_needs_code_or_manifest_evidence(self):
@@ -1319,7 +1328,8 @@ class CodebaseValidateTests(ValidateCase):
         from explainlib import validate as v
 
         self.assertEqual(
-            v._SECTION_KINDS["codebase"], frozenset({"prose", "diagram", "decisions", "risks", "quiz", "map", "start"})
+            v._SECTION_KINDS["codebase"],
+            frozenset({"prose", "example", "diagram", "decisions", "risks", "quiz", "map", "start"}),
         )
         self.assertNotIn("map", v._SECTION_KINDS["plan"])
         self.assertNotIn("start", v._SECTION_KINDS["idea"])
@@ -1372,9 +1382,9 @@ class CodebaseValidateTests(ValidateCase):
             {"path": "src/", "role": "x", "evidence": [], "confidence": "unknown"} for _ in range(25)
         ]
         self.assertIn(("/sections/1/entries", "expected 1..24 items"), self.errors())
-        entry = {"path": "src/", "role": "word " * 41, "evidence": [], "confidence": "unknown"}
+        entry = {"path": "src/", "role": "word " * 61, "evidence": [], "confidence": "unknown"}
         self.section("map")["entries"] = [entry]
-        self.assertIn(("/sections/1/entries/0/role", "exceeds 40 words"), self.errors())
+        self.assertIn(("/sections/1/entries/0/role", "exceeds 60 words"), self.errors())
         entry["role"] = "ok"
         entry["path"] = "a" * 121
         self.assertIn(
@@ -1716,7 +1726,7 @@ class SchemaDocsTests(unittest.TestCase):
         self.assertEqual(schema["properties"]["explain_schema"]["const"], 1)
         self.assertEqual(sorted(schema["properties"]["kind"]["enum"]), ["codebase", "idea", "plan"])
         sections = {o["properties"]["type"]["const"]: o for o in schema["properties"]["sections"]["items"]["oneOf"]}
-        self.assertEqual(set(sections), {"prose", "change", "diagram", "coverage", "decisions", "risks", "quiz", "map", "start"})
+        self.assertEqual(set(sections), {"prose", "example", "change", "diagram", "coverage", "decisions", "risks", "quiz", "map", "start"})
         entries = sections["map"]["properties"]["entries"]
         self.assertEqual((entries["minItems"], entries["maxItems"]), (1, 24))
         self.assertEqual(entries["items"]["properties"]["path"]["maxLength"], 120)
@@ -1808,7 +1818,7 @@ class CodebaseRenderTests(unittest.TestCase):
         session = self.prepare(target)
         self.render(session)
         data = self.payload(session)
-        self.assertEqual(data["meta"]["version"], "0.2.1")
+        self.assertEqual(data["meta"]["version"], "0.3.0")
         self.assertEqual(data["meta"]["depth"], "docs")
         self.assertEqual(data["meta"]["code_excerpts"], 0)
         self.assertEqual(data["explain"]["kind"], "codebase")
@@ -1879,7 +1889,7 @@ class CodebaseRenderTests(unittest.TestCase):
         result = json.loads((session / "result.json").read_text(encoding="utf-8"))
         self.assertEqual(result["kind"], "codebase")
         self.assertIsNone(result["doc"])
-        self.assertEqual(result["version"], "0.2.1")
+        self.assertEqual(result["version"], "0.3.0")
         self.assertEqual(result["explain_contract"], 1)
 
     def test_render_refuses_a_secret_in_explain_json(self):
@@ -1906,19 +1916,19 @@ class CodebaseRenderTests(unittest.TestCase):
 
 
 class VersionTests(unittest.TestCase):
-    def test_version_is_0_2_0_everywhere(self):
+    def test_version_is_current_everywhere(self):
         from explainlib import __version__
 
-        self.assertEqual(__version__, "0.2.1")
+        self.assertEqual(__version__, "0.3.0")
         skill = (helpers.REPO / "paseo-explain" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn('  version: "0.2.1"', skill)
+        self.assertIn('  version: "0.3.0"', skill)
         schema = json.loads((helpers.REPO / "paseo-explain" / "references" / "result.schema.json").read_text(encoding="utf-8"))
-        self.assertEqual(schema["properties"]["version"]["const"], "0.2.1")
+        self.assertEqual(schema["properties"]["version"]["const"], "0.3.0")
         self.assertIn("codebase", schema["properties"]["kind"]["enum"])
         self.assertIn("withheld_secret", schema["properties"]["findings"]["items"]["properties"]["kind"]["enum"])
         template = (helpers.REPO / "paseo-explain" / "assets" / "template.html").read_text(encoding="utf-8")
-        self.assertIn('<meta name="paseo-explain" content="0.2.1">', template)
-        self.assertIn('meta.version || "0.2.1"', template)
+        self.assertIn('<meta name="paseo-explain" content="0.3.0">', template)
+        self.assertIn('meta.version || "0.3.0"', template)
         self.assertNotIn("0.1.0", template)
 
 
